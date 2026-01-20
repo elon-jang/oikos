@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+.eggs
+dist
+build
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# 문서 (이미지에 불필요)
+*.md
+!README.md
+
+# 샘플/테스트 데이터 (볼륨으로 마운트)
+*.xlsx
+*.docx
+receipts/
+발행대장*.xlsx
+
+# 설정 파일 (볼륨으로 마운트)
+config.yaml
+
+# Claude 설정
+.claude/
+
+# 블로그/분석 문서
+blog_*.md
+session_analysis_*.md
