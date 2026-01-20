@@ -11,3 +11,7 @@ __pycache__/
 
 # Claude
 .claude/
+
+# Blog posts (별도 관리)
+blog_*.md
+session_analysis_*.md
