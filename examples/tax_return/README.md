@@ -2,6 +2,69 @@
 
 교회, 비영리단체 등에서 사용할 수 있는 기부금 영수증 자동 발행 시스템입니다.
 
+## 설치 방법 선택
+
+| 방법 | 대상 | 난이도 |
+|------|------|--------|
+| [MCP 서버 (Docker)](#mcp-서버-설치) | Claude Desktop 사용자 | ⭐ 쉬움 |
+| [Claude Code 명령어](#claude-code-명령어) | Claude Code 사용자 | ⭐ 쉬움 |
+| [Python 직접 실행](#빠른-시작) | 개발자 | ⭐⭐ 보통 |
+
+---
+
+## MCP 서버 설치
+
+Claude Desktop에서 자연어로 영수증을 발행할 수 있습니다.
+
+### 원클릭 설치
+
+**macOS:**
+```bash
+curl -sL https://raw.githubusercontent.com/elon-jang/oikos/master/examples/tax_return/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/elon-jang/oikos/master/examples/tax_return/install.ps1 | iex
+```
+
+**GUI 설치 도우미:**
+```bash
+# Python 3.8+ 필요
+python install_gui.py
+```
+
+### 사용 예시 (Claude Desktop)
+
+```
+사용자: 영수증 발행 대상자가 몇 명이야?
+Claude: 총 94명의 대상자가 있습니다.
+
+사용자: 홍길동 영수증 발행해줘
+Claude: 홍길동님 영수증이 생성되었습니다.
+        파일: ~/기부금영수증/receipts/기부금영수증_홍길동.docx
+
+사용자: 전체 영수증 발행해줘
+Claude: 94명의 영수증을 생성합니다. 계속할까요?
+```
+
+### MCP 도구 목록
+
+| 도구 | 설명 |
+|------|------|
+| `list_recipients` | 대상자 목록 조회 |
+| `generate_receipt` | 특정인 영수증 생성 |
+| `generate_all_receipts` | 전체 영수증 생성 |
+| `preview_receipt` | 영수증 미리보기 |
+| `validate_data` | 데이터 파일 검증 |
+| `validate_template` | 템플릿 파일 검증 |
+| `get_history` | 발행 이력 조회 |
+| `get_person_history` | 특정인 이력 조회 |
+
+> 자세한 내용: [DOCKER.md](DOCKER.md), [MCP_사용가이드.md](MCP_사용가이드.md)
+
+---
+
 ## Claude Code 명령어
 
 `/receipt` 명령어로 간편하게 사용할 수 있습니다.
@@ -123,6 +186,7 @@ python generate_receipts.py -n 홍길동 --pdf
 | `--data 파일`    | 데이터 파일 직접 지정 | `--data 2024_income_summary.xlsx` |
 | `--history`      | 발행 이력 조회   | `--history`                   |
 | `--history -n 이름` | 특정인 이력 조회 | `--history -n 강신애`         |
+| `--template 파일` | 템플릿 파일 지정 | `--template my_template.docx` |
 | `--pdf`          | PDF로 변환 (DOCX 유지) | `--pdf`                  |
 
 ## 입력 데이터
