@@ -1,8 +1,12 @@
 # 개인정보 포함 파일 (Git 제외)
 *_income.xls
 *_income_summary.xlsx
+!sample_income_summary.xlsx
 receipts/
 발행대장*.xlsx
+
+# 사용자 설정 파일
+config.yaml
 
 # 샘플 영수증 (개인정보 포함 가능)
 inkwang_donation_receipt.pdf

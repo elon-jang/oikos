@@ -1,6 +1,6 @@
 # 기부금 영수증 자동 발행 시스템
 
-인광교회 헌금 기부금 영수증을 자동으로 생성하는 스크립트입니다.
+교회, 비영리단체 등에서 사용할 수 있는 기부금 영수증 자동 발행 시스템입니다.
 
 ## Claude Code 명령어
 
@@ -28,15 +28,39 @@
 /receipt history 강신애   # 특정인 이력
 ```
 
+## 빠른 시작
+
+### 1. 샘플로 테스트하기
+
+```bash
+# 샘플 데이터로 테스트
+python generate_receipts.py --list --data sample_income_summary.xlsx
+python generate_receipts.py -n 홍길동 --data sample_income_summary.xlsx
+```
+
+### 2. 실제 사용 준비
+
+1. **템플릿 준비**: `템플릿_만들기_가이드.md` 참고하여 Word 템플릿 작성
+2. **데이터 준비**: Excel 파일에 헌금 데이터 입력 (`YYYY_income_summary.xlsx`)
+3. **설정 (선택)**: `config.sample.yaml` → `config.yaml` 복사 후 수정
+
+```bash
+# 설정 파일 복사
+cp config.sample.yaml config.yaml
+
+# 영수증 생성
+python generate_receipts.py
+```
+
 ## 파일 구조
 
 ```
 tax_return/
 ├── generate_receipts.py          # 영수증 생성 스크립트
-├── donation_receipt_template.docx # 영수증 템플릿
-├── 2025_income_summary.xlsx      # 헌금 데이터 (연도별)
-├── 2025_income.xls               # 원본 헌금 데이터
-├── 헌금정리_프롬프트.md           # 데이터 정리용 프롬프트
+├── donation_receipt_template.docx # 영수증 템플릿 (직접 작성)
+├── sample_income_summary.xlsx    # 샘플 헌금 데이터
+├── config.sample.yaml            # 설정 파일 샘플
+├── 템플릿_만들기_가이드.md         # 템플릿 작성 가이드
 ├── receipts/                     # 생성된 영수증 폴더
 └── README.md                     # 이 문서
 ```
@@ -45,6 +69,9 @@ tax_return/
 
 ```bash
 pip install pandas openpyxl docxtpl
+
+# 설정 파일 사용 시 (선택)
+pip install pyyaml
 
 # PDF 변환 기능 사용 시 (선택)
 pip install docx2pdf  # Word 설치 필요
@@ -164,10 +191,36 @@ python generate_receipts.py -n 홍길동 --pdf
 
    - DOCX 파일 인쇄 또는 이메일 발송
 
+## 설정 파일 (config.yaml)
+
+설정 파일로 단체 정보와 파일 경로를 커스터마이징할 수 있습니다.
+
+```bash
+cp config.sample.yaml config.yaml
+```
+
+```yaml
+# config.yaml 예시
+organization:
+  name: "OO교회"
+  representative: "홍길동"
+
+files:
+  template: "donation_receipt_template.docx"
+  output_dir: "receipts"
+
+receipt:
+  prefix: ""  # 발급번호 접두사 (예: "A" → "A26-001")
+```
+
+> 설정 파일이 없으면 기본값을 사용합니다.
+> YAML 파싱을 위해 `pip install pyyaml` 필요
+
 ## 발급번호 규칙
 
-- 형식: `YY-NNN`
+- 형식: `[접두사]YY-NNN`
 - 예: `26-001` (2026년 첫 번째 영수증)
+- 접두사 설정 시: `A26-001`
 - 이름 가나다순 정렬 후 순차 부여
 - 연도는 데이터 파일 연도 + 1 (예: 2025 데이터 → 26-XXX)
 

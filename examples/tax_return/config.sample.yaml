@@ -1,0 +1,19 @@
+# 기부금 영수증 시스템 설정
+# 이 파일을 config.yaml로 복사하여 사용하세요
+
+# 단체 정보
+organization:
+  name: "OO교회"                    # 단체명
+  representative: "홍길동"          # 대표자명
+  business_number: "000-00-00000"  # 사업자등록번호
+  address: "서울시 OO구 OO동"       # 소재지
+
+# 파일 설정
+files:
+  template: "donation_receipt_template.docx"  # 템플릿 파일명
+  output_dir: "receipts"                      # 출력 폴더
+
+# 발급번호 설정
+receipt:
+  prefix: ""        # 발급번호 접두사 (예: "A", "B" 등, 비워두면 연도만 사용)
+  # 예: prefix가 "A"이면 "A26-001", 비어있으면 "26-001"

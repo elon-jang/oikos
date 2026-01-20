@@ -28,11 +28,51 @@ from datetime import datetime
 import pandas as pd
 from docxtpl import DocxTemplate
 
-# 설정
-TEMPLATE_FILE = "donation_receipt_template.docx"
-OUTPUT_DIR = "receipts"
+# 설정 기본값
+DEFAULT_CONFIG = {
+    "files": {
+        "template": "donation_receipt_template.docx",
+        "output_dir": "receipts"
+    },
+    "receipt": {
+        "prefix": ""
+    }
+}
+
 REQUIRED_COLUMNS = ["이름", "1월", "2월", "3월", "4월", "5월", "6월",
                     "7월", "8월", "9월", "10월", "11월", "12월", "연간 총합"]
+
+
+def load_config():
+    """설정 파일 로드"""
+    config = DEFAULT_CONFIG.copy()
+
+    # config.yaml 파일이 있으면 로드
+    if os.path.exists("config.yaml"):
+        try:
+            import yaml
+            with open("config.yaml", "r", encoding="utf-8") as f:
+                user_config = yaml.safe_load(f)
+                if user_config:
+                    # 중첩 딕셔너리 병합
+                    for key, value in user_config.items():
+                        if isinstance(value, dict) and key in config:
+                            config[key].update(value)
+                        else:
+                            config[key] = value
+        except ImportError:
+            pass  # yaml 모듈 없으면 기본값 사용
+        except Exception as e:
+            print(f"⚠️  config.yaml 로드 실패: {e}")
+
+    return config
+
+
+# 전역 설정 로드
+CONFIG = load_config()
+TEMPLATE_FILE = CONFIG["files"]["template"]
+OUTPUT_DIR = CONFIG["files"]["output_dir"]
+RECEIPT_PREFIX = CONFIG["receipt"].get("prefix", "")
 
 
 def validate_template():
@@ -363,7 +403,7 @@ def main():
 
     # 전체 데이터에서 발급번호 매핑 (일관성 유지)
     df_all = load_data(data_file)
-    receipt_no_map = {row["이름"]: f"{issue_year}-{idx+1:03d}" for idx, row in df_all.iterrows()}
+    receipt_no_map = {row["이름"]: f"{RECEIPT_PREFIX}{issue_year}-{idx+1:03d}" for idx, row in df_all.iterrows()}
 
     # 발행대장 로드
     ledger_df = load_or_create_ledger(ledger_path)
@@ -375,7 +415,7 @@ def main():
 
     for _, row in df.iterrows():
         name = row["이름"]
-        receipt_no = receipt_no_map.get(name, f"{issue_year}-000")
+        receipt_no = receipt_no_map.get(name, f"{RECEIPT_PREFIX}{issue_year}-000")
         monthly_amounts = {col: row[col] for col in month_cols}
         total_amount = row["연간 총합"]
         safe_name = name.replace("/", "_").replace("\\", "_")
