@@ -75,11 +75,12 @@ OUTPUT_DIR = CONFIG["files"]["output_dir"]
 RECEIPT_PREFIX = CONFIG["receipt"].get("prefix", "")
 
 
-def validate_template():
+def validate_template(template_file):
     """템플릿 파일 존재 확인"""
-    if not os.path.exists(TEMPLATE_FILE):
-        print(f"❌ 오류: 템플릿 파일이 없습니다: {TEMPLATE_FILE}")
+    if not os.path.exists(template_file):
+        print(f"❌ 오류: 템플릿 파일이 없습니다: {template_file}")
         print("   donation_receipt_template.docx 파일을 프로젝트 폴더에 추가하세요.")
+        print("   또는 --template 옵션으로 템플릿 파일을 지정하세요.")
         return False
     return True
 
@@ -322,15 +323,20 @@ def main():
                         help="데이터 연도 수동 지정 (예: 2025)")
     parser.add_argument("--data",
                         help="데이터 파일 경로 (예: 2024_income_summary.xlsx)")
+    parser.add_argument("--template",
+                        help="템플릿 파일 경로 (예: my_template.docx)")
     parser.add_argument("--history", action="store_true",
                         help="발행 이력 조회")
     parser.add_argument("--pdf", action="store_true",
                         help="PDF로 변환 (DOCX도 유지)")
     args = parser.parse_args()
 
+    # 템플릿 파일 결정
+    template_file = args.template if args.template else TEMPLATE_FILE
+
     # 템플릿 파일 확인 (history 모드가 아닐 때만)
     if not args.history and not args.list:
-        if not validate_template():
+        if not validate_template(template_file):
             sys.exit(1)
 
     # 데이터 파일 결정
@@ -423,7 +429,7 @@ def main():
         output_path = os.path.join(OUTPUT_DIR, f"기부금영수증_{safe_name}.docx")
 
         try:
-            create_receipt(TEMPLATE_FILE, name, monthly_amounts, total_amount, receipt_no, output_path)
+            create_receipt(template_file, name, monthly_amounts, total_amount, receipt_no, output_path)
         except Exception as e:
             print(f"  ❌ 실패: {name} - {e}")
             continue

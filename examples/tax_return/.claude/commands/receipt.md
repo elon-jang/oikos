@@ -36,6 +36,15 @@
 
 # 특정인 이력 조회
 /receipt history 강신애
+
+# 템플릿 지정
+/receipt generate --template my_template.docx
+
+# 데이터 파일 지정
+/receipt list --data sample_income_summary.xlsx
+
+# 템플릿과 데이터 모두 지정
+/receipt generate 홍길동 --template my_template.docx --data 2024_income_summary.xlsx
 ```
 
 ---
@@ -82,6 +91,20 @@ python generate_receipts.py [옵션]
 
 ### 5. 추가 옵션
 
-사용자가 연도나 데이터 파일을 지정하면:
-- `--year 2024` → `python generate_receipts.py --year 2024`
-- `--data 파일.xlsx` → `python generate_receipts.py --data 파일.xlsx`
+사용자가 옵션을 지정하면 해당 옵션을 명령어에 추가하세요:
+
+| 옵션 | 설명 | 예시 |
+|------|------|------|
+| `--template 파일` | 템플릿 파일 지정 | `--template my_template.docx` |
+| `--data 파일` | 데이터 파일 지정 | `--data sample_income_summary.xlsx` |
+| `--year 연도` | 연도 지정 | `--year 2024` |
+| `--pdf` | PDF 변환 | `--pdf` |
+
+**명령어 조합 예시:**
+
+| 입력 | 실행 명령어 |
+|------|-------------|
+| `/receipt list --data sample.xlsx` | `python generate_receipts.py --list --data sample.xlsx` |
+| `/receipt generate --template t.docx` | `python generate_receipts.py --template t.docx` |
+| `/receipt generate 홍길동 --template t.docx --data d.xlsx` | `python generate_receipts.py -n 홍길동 --template t.docx --data d.xlsx` |
+| `/receipt generate --pdf` | `python generate_receipts.py --pdf` |
