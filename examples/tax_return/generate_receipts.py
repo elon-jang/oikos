@@ -15,12 +15,15 @@
     python generate_receipts.py --data 2024_income_summary.xlsx  # 데이터 파일 지정
     python generate_receipts.py --history           # 발행 이력 조회
     python generate_receipts.py --history -n 강신애  # 특정인 이력 조회
+    python generate_receipts.py --pdf               # PDF로 변환
 """
 
 import argparse
 import os
 import re
 import glob
+import sys
+import subprocess
 from datetime import datetime
 import pandas as pd
 from docxtpl import DocxTemplate
@@ -28,6 +31,85 @@ from docxtpl import DocxTemplate
 # 설정
 TEMPLATE_FILE = "donation_receipt_template.docx"
 OUTPUT_DIR = "receipts"
+REQUIRED_COLUMNS = ["이름", "1월", "2월", "3월", "4월", "5월", "6월",
+                    "7월", "8월", "9월", "10월", "11월", "12월", "연간 총합"]
+
+
+def validate_template():
+    """템플릿 파일 존재 확인"""
+    if not os.path.exists(TEMPLATE_FILE):
+        print(f"❌ 오류: 템플릿 파일이 없습니다: {TEMPLATE_FILE}")
+        print("   donation_receipt_template.docx 파일을 프로젝트 폴더에 추가하세요.")
+        return False
+    return True
+
+
+def validate_data_file(file_path):
+    """데이터 파일 유효성 검사"""
+    if not os.path.exists(file_path):
+        print(f"❌ 오류: 데이터 파일이 없습니다: {file_path}")
+        return False
+
+    try:
+        df = pd.read_excel(file_path)
+    except Exception as e:
+        print(f"❌ 오류: 데이터 파일을 읽을 수 없습니다: {file_path}")
+        print(f"   원인: {e}")
+        return False
+
+    # 필수 컬럼 확인
+    missing_cols = [col for col in REQUIRED_COLUMNS if col not in df.columns]
+    if missing_cols:
+        print(f"❌ 오류: 필수 컬럼이 없습니다: {', '.join(missing_cols)}")
+        print(f"   필수 컬럼: {', '.join(REQUIRED_COLUMNS)}")
+        return False
+
+    # 금액 데이터 검증
+    month_cols = [f"{i}월" for i in range(1, 13)] + ["연간 총합"]
+    for col in month_cols:
+        if col in df.columns:
+            # 숫자가 아닌 값 확인 (NaN 제외)
+            non_numeric = df[col].dropna().apply(lambda x: not isinstance(x, (int, float)))
+            if non_numeric.any():
+                print(f"⚠️  경고: '{col}' 컬럼에 숫자가 아닌 값이 있습니다.")
+
+            # 음수 값 확인
+            negative = df[col].dropna().apply(lambda x: isinstance(x, (int, float)) and x < 0)
+            if negative.any():
+                print(f"⚠️  경고: '{col}' 컬럼에 음수 값이 있습니다.")
+
+    return True
+
+
+def convert_to_pdf(docx_path):
+    """DOCX를 PDF로 변환"""
+    pdf_path = docx_path.replace(".docx", ".pdf")
+
+    # 방법 1: docx2pdf 라이브러리 시도
+    try:
+        from docx2pdf import convert
+        convert(docx_path, pdf_path)
+        return pdf_path
+    except ImportError:
+        pass
+    except Exception:
+        pass
+
+    # 방법 2: LibreOffice 사용 (macOS/Linux)
+    try:
+        result = subprocess.run([
+            "soffice", "--headless", "--convert-to", "pdf",
+            "--outdir", os.path.dirname(docx_path) or ".",
+            docx_path
+        ], capture_output=True, text=True, timeout=30)
+        if result.returncode == 0 and os.path.exists(pdf_path):
+            return pdf_path
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+
+    # 방법 3: macOS에서 textutil + cupsfilter (제한적)
+    # 실패 시 None 반환
+    return None
 
 
 def find_latest_data_file():
@@ -202,7 +284,14 @@ def main():
                         help="데이터 파일 경로 (예: 2024_income_summary.xlsx)")
     parser.add_argument("--history", action="store_true",
                         help="발행 이력 조회")
+    parser.add_argument("--pdf", action="store_true",
+                        help="PDF로 변환 (DOCX도 유지)")
     args = parser.parse_args()
+
+    # 템플릿 파일 확인 (history 모드가 아닐 때만)
+    if not args.history and not args.list:
+        if not validate_template():
+            sys.exit(1)
 
     # 데이터 파일 결정
     if args.data:
@@ -214,12 +303,14 @@ def main():
     else:
         data_file, data_year = find_latest_data_file()
         if not data_file:
-            print("데이터 파일을 찾을 수 없습니다. --data 옵션으로 지정하세요.")
-            return
+            print("❌ 오류: 데이터 파일을 찾을 수 없습니다.")
+            print("   YYYY_income_summary.xlsx 형식의 파일이 필요합니다.")
+            print("   또는 --data 옵션으로 파일을 지정하세요.")
+            sys.exit(1)
 
-    if not os.path.exists(data_file):
-        print(f"데이터 파일이 없습니다: {data_file}")
-        return
+    # 데이터 파일 유효성 검사
+    if not validate_data_file(data_file):
+        sys.exit(1)
 
     # 발급 연도 계산
     if data_year:
@@ -279,6 +370,8 @@ def main():
 
     month_cols = [f"{i}월" for i in range(1, 13)]
     count = 0
+    pdf_count = 0
+    pdf_failed = False
 
     for _, row in df.iterrows():
         name = row["이름"]
@@ -288,7 +381,22 @@ def main():
         safe_name = name.replace("/", "_").replace("\\", "_")
 
         output_path = os.path.join(OUTPUT_DIR, f"기부금영수증_{safe_name}.docx")
-        create_receipt(TEMPLATE_FILE, name, monthly_amounts, total_amount, receipt_no, output_path)
+
+        try:
+            create_receipt(TEMPLATE_FILE, name, monthly_amounts, total_amount, receipt_no, output_path)
+        except Exception as e:
+            print(f"  ❌ 실패: {name} - {e}")
+            continue
+
+        # PDF 변환
+        if args.pdf:
+            pdf_path = convert_to_pdf(output_path)
+            if pdf_path:
+                pdf_count += 1
+            elif not pdf_failed:
+                pdf_failed = True
+                print("  ⚠️  PDF 변환 실패: docx2pdf 또는 LibreOffice가 필요합니다.")
+                print("     설치: pip install docx2pdf (Word 필요) 또는 brew install libreoffice")
 
         # 발행대장에 기록
         ledger_df = add_to_ledger(ledger_df, receipt_no, name, total_amount, output_path)
@@ -300,6 +408,8 @@ def main():
     save_ledger(ledger_df, ledger_path)
 
     print(f"\n완료! {OUTPUT_DIR}/ 폴더에 {count}개 DOCX 생성됨")
+    if args.pdf and pdf_count > 0:
+        print(f"       {pdf_count}개 PDF 변환됨")
     print(f"발행대장: {ledger_path}")
 
 

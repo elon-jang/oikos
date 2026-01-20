@@ -2,6 +2,18 @@
 
 Claude Code 활용 예제 모음입니다.
 
+## 플러그인 설치
+
+```bash
+# 1. 마켓플레이스 추가
+/plugin marketplace add elon-jang/claude-plugins
+
+# 2. 플러그인 설치
+/plugin install oikos@elon-jang
+```
+
+> 플러그인 설치 방법: [claude-plugins README](https://github.com/elon-jang/claude-plugins/blob/master/README.md)
+
 ## 예제 목록
 
 ### 1. 엑셀/문서 자동화 (`examples/excel_doc_automation`)

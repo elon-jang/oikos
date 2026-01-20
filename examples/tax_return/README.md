@@ -2,6 +2,32 @@
 
 인광교회 헌금 기부금 영수증을 자동으로 생성하는 스크립트입니다.
 
+## Claude Code 명령어
+
+`/receipt` 명령어로 간편하게 사용할 수 있습니다.
+
+### 플러그인 설치
+
+```bash
+# 1. 마켓플레이스 추가
+/plugin marketplace add elon-jang/claude-plugins
+
+# 2. 플러그인 설치
+/plugin install oikos@elon-jang
+```
+
+> 플러그인 설치 방법: [claude-plugins README](https://github.com/elon-jang/claude-plugins/blob/master/README.md)
+
+### 명령어 사용법
+
+```bash
+/receipt generate        # 전체 발행
+/receipt generate 홍길동  # 특정인 발행
+/receipt list            # 대상자 목록
+/receipt history         # 발행 이력
+/receipt history 강신애   # 특정인 이력
+```
+
 ## 파일 구조
 
 ```
@@ -19,6 +45,11 @@ tax_return/
 
 ```bash
 pip install pandas openpyxl docxtpl
+
+# PDF 변환 기능 사용 시 (선택)
+pip install docx2pdf  # Word 설치 필요
+# 또는
+brew install libreoffice  # macOS
 ```
 
 ## 사용법
@@ -47,6 +78,10 @@ python generate_receipts.py --history
 
 # 특정인 발행 이력 조회
 python generate_receipts.py --history -n 강신애
+
+# PDF로 변환 (DOCX도 유지)
+python generate_receipts.py --pdf
+python generate_receipts.py -n 홍길동 --pdf
 ```
 
 ### 옵션
@@ -61,6 +96,7 @@ python generate_receipts.py --history -n 강신애
 | `--data 파일`    | 데이터 파일 직접 지정 | `--data 2024_income_summary.xlsx` |
 | `--history`      | 발행 이력 조회   | `--history`                   |
 | `--history -n 이름` | 특정인 이력 조회 | `--history -n 강신애`         |
+| `--pdf`          | PDF로 변환 (DOCX 유지) | `--pdf`                  |
 
 ## 입력 데이터
 
@@ -100,8 +136,8 @@ python generate_receipts.py --history -n 강신애
 
 ## 출력
 
-- **형식**: DOCX (Word 문서)
-- **파일명**: `기부금영수증_이름.pdf`
+- **형식**: DOCX (Word 문서), PDF (--pdf 옵션 사용 시)
+- **파일명**: `기부금영수증_이름.docx` (또는 `.pdf`)
 - **위치**: `receipts/` 폴더
 
 ## 주민등록번호/주소 처리
@@ -165,6 +201,19 @@ python generate_receipts.py --history -n 강신애  # 특정인 이력
 
 ## 문제 해결
 
+### 오류: 템플릿 파일이 없습니다
+
+- `donation_receipt_template.docx` 파일이 프로젝트 폴더에 있는지 확인
+
+### 오류: 데이터 파일을 찾을 수 없습니다
+
+- `YYYY_income_summary.xlsx` 형식의 파일이 필요
+- 또는 `--data 파일경로` 옵션으로 직접 지정
+
+### 오류: 필수 컬럼이 없습니다
+
+- Excel 파일에 필수 컬럼 확인: `이름`, `1월`~`12월`, `연간 총합`
+
 ### 오류: `TemplateSyntaxError`
 
 - 템플릿의 placeholder 문법 확인 (`}}` 누락 등)
@@ -176,3 +225,8 @@ python generate_receipts.py --history -n 강신애  # 특정인 이력
 ### 부부가 분리되지 않음
 
 - 이름에 쉼표(`,`) 사용 확인 (마침표 아님)
+
+### PDF 변환 실패
+
+- `docx2pdf` 설치: `pip install docx2pdf` (Microsoft Word 필요)
+- 또는 LibreOffice 설치: `brew install libreoffice` (macOS)

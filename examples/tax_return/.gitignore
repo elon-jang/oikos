@@ -9,7 +9,8 @@ inkwang_donation_receipt.pdf
 
 # 시스템 파일
 .DS_Store
-.claude/
+.claude/*
+!.claude/commands/
 .vscode/
 
 # Python

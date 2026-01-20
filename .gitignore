@@ -9,8 +9,9 @@ __pycache__/
 .vscode/
 .idea/
 
-# Claude
-.claude/
+# Claude (commands는 포함)
+.claude/*
+!.claude/commands/
 
 # Blog posts (별도 관리)
 blog_*.md
