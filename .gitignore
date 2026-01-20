@@ -15,4 +15,3 @@ __pycache__/
 
 # Blog posts (별도 관리)
 blog_*.md
-session_analysis_*.md
