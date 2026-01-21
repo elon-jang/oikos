@@ -44,28 +44,15 @@ echo "2️⃣  데이터 폴더 생성 중..."
 mkdir -p "$DATA_DIR/receipts"
 echo -e "${GREEN}✅ 폴더 생성됨: $DATA_DIR${NC}"
 
-# 3. Docker 이미지 빌드 또는 다운로드
+# 3. Docker 이미지 다운로드
 echo ""
-echo "3️⃣  Docker 이미지 준비 중..."
+echo "3️⃣  Docker 이미지 다운로드 중..."
+echo "   joomanba/oikos-receipt:latest 이미지를 받는 중..."
+docker pull joomanba/oikos-receipt:latest
 
-# 임시 디렉토리에 소스 다운로드
-TEMP_DIR=$(mktemp -d)
-cd "$TEMP_DIR"
-
-echo "   소스 코드 다운로드 중..."
-git clone --depth 1 https://github.com/elon-jang/oikos.git
-cd oikos/tax_return
-
-echo "   Docker 이미지 빌드 중... (몇 분 소요될 수 있습니다)"
-docker build -f deploy/Dockerfile -t oikos-receipt:latest . > /dev/null 2>&1
-
-# 샘플 파일 복사
-echo "   샘플 파일 복사 중..."
-cp sample_income_summary.xlsx "$DATA_DIR/" 2>/dev/null || true
-
-# 임시 폴더 정리
-cd "$HOME"
-rm -rf "$TEMP_DIR"
+# 샘플 파일 다운로드
+echo "   샘플 파일 다운로드 중..."
+curl -sL "https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/sample_income_summary.xlsx" -o "$DATA_DIR/sample_income_summary.xlsx" 2>/dev/null || true
 
 echo -e "${GREEN}✅ Docker 이미지 준비됨${NC}"
 
@@ -109,7 +96,7 @@ config["mcpServers"]["oikos-receipt"] = {
     "args": [
         "run", "-i", "--rm",
         "-v", f"{data_dir}:/data",
-        "oikos-receipt:latest"
+        "joomanba/oikos-receipt:latest"
     ]
 }
 

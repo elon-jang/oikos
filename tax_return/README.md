@@ -91,14 +91,14 @@ Claude: 완료! 94개의 영수증이 receipts 폴더에 생성되었어요.
 
 | 도구 | 설명 | 사용 예시 |
 |------|------|----------|
-| `list_recipients` | 대상자 목록 조회 | "누가 영수증 받아야 해?" |
-| `generate_receipt` | 특정인 영수증 생성 | "홍길동 영수증 만들어줘" |
-| `generate_all_receipts` | 전체 영수증 생성 | "전체 영수증 발행해" |
-| `preview_receipt` | 영수증 미리보기 | "홍길동 영수증 미리 보여줘" |
-| `validate_data` | 데이터 파일 검증 | "데이터 파일 확인해줘" |
-| `validate_template` | 템플릿 파일 검증 | "템플릿 괜찮은지 봐줘" |
-| `get_history` | 발행 이력 조회 | "지금까지 뭐 발행했어?" |
-| `get_person_history` | 특정인 이력 조회 | "홍길동 언제 발행했었지?" |
+| `list_donation_recipients` | 대상자 목록 조회 | "누가 영수증 받아야 해?" |
+| `generate_donation_receipt` | 특정인 영수증 생성 | "홍길동 영수증 만들어줘" |
+| `generate_all_donation_receipts` | 전체 영수증 생성 | "전체 영수증 발행해" |
+| `preview_donation_receipt` | 영수증 미리보기 | "홍길동 영수증 미리 보여줘" |
+| `validate_donation_data` | 데이터 파일 검증 | "데이터 파일 확인해줘" |
+| `validate_receipt_template` | 템플릿 파일 검증 | "템플릿 괜찮은지 봐줘" |
+| `get_receipt_history` | 발행 이력 조회 | "지금까지 뭐 발행했어?" |
+| `get_person_receipt_history` | 특정인 이력 조회 | "홍길동 언제 발행했었지?" |
 
 > 자세한 내용: [DOCKER.md](docs/DOCKER.md), [MCP_사용가이드.md](docs/MCP_사용가이드.md)
 
@@ -150,6 +150,8 @@ cd oikos/tax_return
 ### 설정 완료 후
 
 Claude Desktop을 재시작하면 사용 준비 완료!
+
+> 자세한 내용: [PYTHON.md](docs/PYTHON.md)
 
 ---
 

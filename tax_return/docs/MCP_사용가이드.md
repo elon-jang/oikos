@@ -325,7 +325,7 @@ Claude에게 자연스럽게 말하면 됩니다. 명령어를 외울 필요 없
 - Mac: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
-**설정 내용 확인:**
+**설정 내용 확인 (Docker 방식):**
 ```json
 {
   "mcpServers": {
@@ -336,6 +336,20 @@ Claude에게 자연스럽게 말하면 됩니다. 명령어를 외울 필요 없
   }
 }
 ```
+
+**설정 내용 확인 (Python 방식):**
+```json
+{
+  "mcpServers": {
+    "oikos-receipt": {
+      "command": "/bin/bash",
+      "args": ["-c", "cd /path/to/tax_return && DATA_DIR=/path/to/data python3 -m mcp_server.server"]
+    }
+  }
+}
+```
+
+> Docker 연결 문제가 발생하면 Python 방식을 권장합니다. 자세한 내용: [PYTHON.md](PYTHON.md)
 
 설정 수정 후 Claude Desktop을 완전히 종료하고 다시 실행하세요.
 
@@ -386,7 +400,8 @@ Claude에게 자연스럽게 말하면 됩니다. 명령어를 외울 필요 없
 |------|------|
 | [README.md](../README.md) | 전체 기능 설명 |
 | [템플릿_만들기_가이드.md](템플릿_만들기_가이드.md) | 템플릿 작성법 |
-| [DOCKER.md](DOCKER.md) | Docker 상세 설정 |
+| [DOCKER.md](DOCKER.md) | Docker 방식 상세 설정 |
+| [PYTHON.md](PYTHON.md) | Python 방식 상세 설정 |
 | [시작하기_가이드.md](시작하기_가이드.md) | 처음부터 설치하기 |
 
 ---
