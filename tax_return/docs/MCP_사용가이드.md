@@ -398,11 +398,11 @@ Claude에게 자연스럽게 말하면 됩니다. 명령어를 외울 필요 없
 
 | 문서 | 설명 |
 |------|------|
-| [README.md](../README.md) | 전체 기능 설명 |
-| [템플릿_만들기_가이드.md](템플릿_만들기_가이드.md) | 템플릿 작성법 |
-| [DOCKER.md](DOCKER.md) | Docker 방식 상세 설정 |
-| [PYTHON.md](PYTHON.md) | Python 방식 상세 설정 |
-| [시작하기_가이드.md](시작하기_가이드.md) | 처음부터 설치하기 |
+| [README.md](../README.md) | 프로젝트 개요 |
+| [Docker 가이드](DOCKER.md) | Docker로 MCP 서버 실행 |
+| [Python 가이드](PYTHON.md) | Python으로 MCP 서버 실행 |
+| [CLI 가이드](CLI_가이드.md) | 터미널에서 직접 실행 |
+| [템플릿 만들기](템플릿_만들기_가이드.md) | 영수증 템플릿 작성법 |
 
 ---
 

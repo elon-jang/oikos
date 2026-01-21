@@ -227,3 +227,15 @@ pip install -r tax_return/requirements.txt
 
 # Claude Desktop 재시작
 ```
+
+---
+
+## 더 알아보기
+
+| 문서 | 설명 |
+|------|------|
+| [README.md](../README.md) | 프로젝트 개요 |
+| [Docker 가이드](DOCKER.md) | Docker로 MCP 서버 실행 |
+| [MCP 사용 가이드](MCP_사용가이드.md) | Claude Desktop 사용법 상세 |
+| [CLI 가이드](CLI_가이드.md) | 터미널에서 직접 실행 |
+| [템플릿 만들기](템플릿_만들기_가이드.md) | 영수증 템플릿 작성법 |
