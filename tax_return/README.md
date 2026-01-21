@@ -8,13 +8,14 @@
 
 | 방법 | 이런 분께 추천 | 난이도 |
 |------|---------------|--------|
-| [MCP 서버 (Docker)](#mcp-서버-설치) | Claude Desktop 사용자, **가장 쉬움!** | ⭐ |
+| [MCP 서버 (Docker)](#mcp-서버-docker-설치) | Claude Desktop 사용자, 환경 설정 간편 | ⭐ |
+| [MCP 서버 (Python)](#mcp-서버-python-설치) | Claude Desktop 사용자, **안정적!** | ⭐⭐ |
 | [Claude Code 명령어](#claude-code-명령어) | 개발자, Claude Code 사용자 | ⭐ |
 | [Python 직접 실행](#python-직접-실행) | 개발자, 커스터마이징 원하시는 분 | ⭐⭐ |
 
 ---
 
-## MCP 서버 설치
+## MCP 서버 (Docker) 설치
 
 > **"Claude야, 영수증 만들어줘!"** 한마디면 끝!
 
@@ -100,6 +101,55 @@ Claude: 완료! 94개의 영수증이 receipts 폴더에 생성되었어요.
 | `get_person_history` | 특정인 이력 조회 | "홍길동 언제 발행했었지?" |
 
 > 자세한 내용: [DOCKER.md](docs/DOCKER.md), [MCP_사용가이드.md](docs/MCP_사용가이드.md)
+
+---
+
+## MCP 서버 (Python) 설치
+
+> Docker 없이 Python으로 직접 MCP 서버 실행! **더 안정적입니다.**
+
+Docker 연결 문제가 발생하거나, 더 안정적인 방식을 원한다면 Python 직접 실행을 추천합니다.
+
+### 설치하기 전에
+
+**Python 3.9+**가 필요합니다.
+
+```bash
+# 필수 패키지 설치
+pip install fastmcp pandas openpyxl docxtpl pyyaml
+
+# 프로젝트 다운로드
+git clone https://github.com/elon-jang/oikos.git
+cd oikos/tax_return
+```
+
+### Claude Desktop 설정
+
+`~/Library/Application Support/Claude/claude_desktop_config.json` (Mac) 또는
+`%APPDATA%\Claude\claude_desktop_config.json` (Windows) 파일에 추가:
+
+```json
+{
+  "mcpServers": {
+    "oikos-receipt": {
+      "command": "/bin/bash",
+      "args": [
+        "-c",
+        "cd /path/to/oikos/tax_return && DATA_DIR=/path/to/donation_receipts python3 -m mcp_server.server"
+      ]
+    }
+  }
+}
+```
+
+**수정 필요한 경로:**
+- `/path/to/oikos/tax_return`: 프로젝트 경로
+- `/path/to/donation_receipts`: 데이터 파일이 있는 폴더
+- `python3`: pyenv 사용 시 절대 경로 (예: `/Users/사용자/.pyenv/versions/myenv/bin/python3`)
+
+### 설정 완료 후
+
+Claude Desktop을 재시작하면 사용 준비 완료!
 
 ---
 
