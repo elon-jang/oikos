@@ -254,14 +254,17 @@ CMD ["python", "-m", "mcp_server.server"]
 
 ---
 
-## Phase 5: 배포 및 유지보수
+## Phase 5: 배포 및 유지보수 ✅
 
 ### 5.1 초기 배포
 
-- [ ] Docker Hub에 v1.0.0 배포
-- [ ] GitHub Release 생성
-- [ ] 설치 스크립트 URL 확정
-- [ ] 문서 최종 검토
+- [x] Docker Hub에 v1.0.0 배포
+  - `joomanba/oikos-receipt:latest`
+  - `joomanba/oikos-receipt:v1.0.0`
+- [x] GitHub Release 생성
+  - https://github.com/elon-jang/oikos/releases/tag/v1.0.0
+- [x] 설치 스크립트 URL 확정
+- [x] 문서 최종 검토
 
 ### 5.2 유지보수 계획
 
@@ -351,23 +354,23 @@ Claude: [generate_receipt 도구 호출]
 | Phase | 작업 | 예상 시간 | 상태 |
 |-------|------|-----------|------|
 | Phase 1 | MCP 서버 핵심 구현 | 4-6시간 | ✅ 완료 |
-| Phase 2 | Docker 이미지 구현 | 2-3시간 | ✅ 파일 작성 완료 |
-| Phase 3 | 원클릭 설치 도구 | 3-4시간 | ✅ 스크립트 작성 완료 |
-| Phase 4 | 문서화 및 테스트 | 2-3시간 | ✅ 테스트 작성 완료 |
-| Phase 5 | 배포 | 1-2시간 | ⏳ 대기 중 |
-| **합계** | | **12-18시간** | |
+| Phase 2 | Docker 이미지 구현 | 2-3시간 | ✅ 완료 |
+| Phase 3 | 원클릭 설치 도구 | 3-4시간 | ✅ 완료 |
+| Phase 4 | 문서화 및 테스트 | 2-3시간 | ✅ 완료 |
+| Phase 5 | 배포 | 1-2시간 | ✅ 완료 |
+| **합계** | | **12-18시간** | ✅ |
 
 ---
 
 ## 미해결 사항
 
-1. **Docker Hub 계정명** - `elonj` 또는 다른 이름?
+1. ~~Docker Hub 계정명~~ - `joomanba/oikos-receipt` (완료)
 2. ~~개인정보 보호 수준~~ - 기본값: 이름/금액 미포함 (완료)
-3. **Smithery 등록** - 진행 여부?
+3. **Smithery 등록** - 추후 진행 여부 결정
 4. ~~GUI 설치 도우미~~ - 스크립트 작성 완료, 빌드는 추후
 
 ---
 
 *문서 생성일: 2026-01-21*
 *최종 수정: 2026-01-21*
-*상태: Phase 1-4 완료, Phase 5 대기*
+*상태: ✅ 모든 Phase 완료 (v1.0.0 배포)*
