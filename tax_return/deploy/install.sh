@@ -38,7 +38,7 @@ fi
 echo -e "${GREEN}✅ Docker 확인됨${NC}"
 
 # 2. 데이터 폴더 생성
-DATA_DIR="$HOME/기부금영수증"
+DATA_DIR="$HOME/donation_receipts"
 echo ""
 echo "2️⃣  데이터 폴더 생성 중..."
 mkdir -p "$DATA_DIR/receipts"

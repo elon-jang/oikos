@@ -58,8 +58,8 @@ Claude Desktop에서 자연어로 영수증을 발행할 수 있습니다.
 ### 설치 완료 후
 
 설치가 완료되면:
-- Mac: `~/기부금영수증/` 폴더가 생성됩니다
-- Windows: `내 문서\기부금영수증\` 폴더가 생성됩니다
+- Mac: `~/donation_receipts/` 폴더가 생성됩니다
+- Windows: `내 문서\donation_receipts\` 폴더가 생성됩니다
 
 이 폴더에 다음 파일들을 넣어주세요:
 - 헌금 데이터 파일 (`2025_income_summary.xlsx`)
@@ -77,7 +77,7 @@ Claude: 총 94명의 대상자가 있습니다. 전체 헌금 총액은 45,000,0
 
 나: 홍길동 영수증 발행해줘
 Claude: 홍길동님 영수증이 생성되었습니다!
-        파일: ~/기부금영수증/receipts/기부금영수증_홍길동.docx
+        파일: ~/donation_receipts/receipts/기부금영수증_홍길동.docx
 
 나: 전체 영수증 발행해줘
 Claude: 94명의 영수증을 생성합니다. 계속할까요?

@@ -24,8 +24,8 @@
 
 | 운영체제 | 폴더 위치 |
 |---------|----------|
-| Mac | `~/기부금영수증/` |
-| Windows | `내 문서\기부금영수증\` |
+| Mac | `~/donation_receipts/` |
+| Windows | `내 문서\donation_receipts\` |
 
 ### 2. 필요한 파일 넣기
 
@@ -133,7 +133,7 @@ Claude에게 자연스럽게 말하면 됩니다. 명령어를 외울 필요 없
 ```
 영수증이 생성되었습니다!
 발급번호: 26-042
-파일: ~/기부금영수증/receipts/기부금영수증_홍길동.docx
+파일: ~/donation_receipts/receipts/기부금영수증_홍길동.docx
 발행대장에 기록되었습니다.
 ```
 
@@ -160,8 +160,8 @@ Claude에게 자연스럽게 말하면 됩니다. 명령어를 외울 필요 없
 **"네"라고 하면:**
 ```
 완료! 94명의 영수증이 생성되었습니다.
-폴더: ~/기부금영수증/receipts/
-발행대장: ~/기부금영수증/발행대장_2026.xlsx
+폴더: ~/donation_receipts/receipts/
+발행대장: ~/donation_receipts/발행대장_2026.xlsx
 ```
 
 ---
@@ -293,7 +293,7 @@ Claude에게 자연스럽게 말하면 됩니다. 명령어를 외울 필요 없
 ### "데이터 파일을 찾을 수 없습니다"
 
 **확인할 것:**
-1. 파일이 `~/기부금영수증/` 폴더에 있나요?
+1. 파일이 `~/donation_receipts/` 폴더에 있나요?
 2. 파일명이 `YYYY_income_summary.xlsx` 형식인가요?
    - 예: `2025_income_summary.xlsx`
 3. Claude Desktop을 재시작했나요?

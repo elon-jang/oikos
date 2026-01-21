@@ -22,11 +22,11 @@ docker build -f deploy/Dockerfile -t oikos-receipt .
 
 ```bash
 # 데이터 폴더 생성
-mkdir -p ~/기부금영수증/receipts
+mkdir -p ~/donation_receipts/receipts
 
 # 필요한 파일 복사
-cp donation_receipt_template.docx ~/기부금영수증/
-cp 2025_income_summary.xlsx ~/기부금영수증/
+cp donation_receipt_template.docx ~/donation_receipts/
+cp 2025_income_summary.xlsx ~/donation_receipts/
 ```
 
 ### 3. Claude Desktop 설정
@@ -43,7 +43,7 @@ cp 2025_income_summary.xlsx ~/기부금영수증/
         "run",
         "-i",
         "--rm",
-        "-v", "/Users/사용자이름/기부금영수증:/data",
+        "-v", "/Users/사용자이름/donation_receipts:/data",
         "oikos-receipt:latest"
       ]
     }
@@ -51,7 +51,7 @@ cp 2025_income_summary.xlsx ~/기부금영수증/
 }
 ```
 
-> ⚠️ `/Users/사용자이름/기부금영수증` 부분을 실제 데이터 폴더 경로로 변경하세요.
+> ⚠️ `/Users/사용자이름/donation_receipts` 부분을 실제 데이터 폴더 경로로 변경하세요.
 
 ### 4. Claude Desktop 재시작
 
@@ -90,12 +90,12 @@ docker build -t oikos-receipt:1.0.0 .
 ```bash
 # 대화형 실행
 docker run -it --rm \
-  -v ~/기부금영수증:/data \
+  -v ~/donation_receipts:/data \
   oikos-receipt
 
 # 목록 조회 테스트
 echo '{"method": "tools/call", "params": {"name": "tool_list_recipients"}}' | \
-  docker run -i --rm -v ~/기부금영수증:/data oikos-receipt
+  docker run -i --rm -v ~/donation_receipts:/data oikos-receipt
 ```
 
 ### 이미지 관리
@@ -114,7 +114,7 @@ docker builder prune
 ## 폴더 구조
 
 ```
-~/기부금영수증/           # 데이터 폴더 (볼륨 마운트)
+~/donation_receipts/           # 데이터 폴더 (볼륨 마운트)
 ├── donation_receipt_template.docx  # 영수증 템플릿
 ├── 2025_income_summary.xlsx        # 헌금 데이터
 ├── config.yaml                     # 설정 (선택)

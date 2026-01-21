@@ -6,7 +6,7 @@
         "run",
         "-i",
         "--rm",
-        "-v", "/Users/사용자이름/기부금영수증:/data",
+        "-v", "/Users/사용자이름/donation_receipts:/data",
         "oikos-receipt:latest"
       ]
     }

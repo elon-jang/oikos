@@ -35,7 +35,7 @@ try {
 }
 
 # 2. 데이터 폴더 생성
-$dataDir = "$env:USERPROFILE\기부금영수증"
+$dataDir = "$env:USERPROFILE\donation_receipts"
 Write-Host ""
 Write-Host "2️⃣  데이터 폴더 생성 중..."
 New-Item -ItemType Directory -Force -Path "$dataDir\receipts" | Out-Null

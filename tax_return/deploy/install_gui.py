@@ -42,11 +42,11 @@ class InstallerApp:
 
         # 기본 데이터 폴더
         if self.is_macos:
-            self.default_data_dir = os.path.expanduser("~/기부금영수증")
+            self.default_data_dir = os.path.expanduser("~/donation_receipts")
         elif self.is_windows:
-            self.default_data_dir = os.path.join(os.environ.get("USERPROFILE", ""), "기부금영수증")
+            self.default_data_dir = os.path.join(os.environ.get("USERPROFILE", ""), "donation_receipts")
         else:
-            self.default_data_dir = os.path.expanduser("~/기부금영수증")
+            self.default_data_dir = os.path.expanduser("~/donation_receipts")
 
         # 변수
         self.data_dir = tk.StringVar(value=self.default_data_dir)

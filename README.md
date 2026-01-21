@@ -51,7 +51,7 @@ irm https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/deploy/i
 ```
 
 **설치 완료 후:**
-- `~/기부금영수증/` 폴더(Mac) 또는 `내 문서\기부금영수증\` 폴더(Windows)가 생성됩니다
+- `~/donation_receipts/` 폴더(Mac) 또는 `내 문서\donation_receipts\` 폴더(Windows)가 생성됩니다
 - 이 폴더에 헌금 데이터 파일과 영수증 템플릿을 넣어주세요
 - Claude Desktop을 재시작하면 사용 준비 완료!
 
