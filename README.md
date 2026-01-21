@@ -81,6 +81,13 @@ oikos/
 - **Issues**: [GitHub Issues](https://github.com/elon-jang/oikos/issues)
 - **PR**: 환영합니다!
 
+## Blog
+
+<!-- spark-index:blog -->
+- [2026-01-21] [[Playwright] 삭제 버튼 52번 누르기 싫어서 만든 자동화 스크립트 (feat. OAuth 로그인 뚫기)](blog/2026-01-21-playwright-delete-automation-oauth.md)
+
+---
+
 ## 라이선스
 
 MIT License
