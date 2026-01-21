@@ -38,7 +38,7 @@ Claude: 완료! 📁 receipts 폴더에 94개의 영수증이 생성되었어요
 2. 아래 명령어를 복사해서 붙여넣고 Enter:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/install.sh | bash
+curl -sL https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/deploy/install.sh | bash
 ```
 
 #### Windows 사용자
@@ -47,7 +47,7 @@ curl -sL https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/ins
 2. 아래 명령어를 복사해서 붙여넣고 Enter:
 
 ```powershell
-irm https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/install.ps1 | iex
+irm https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/deploy/install.ps1 | iex
 ```
 
 **설치 완료 후:**
@@ -110,7 +110,7 @@ python generate_receipts.py         # 전체 발행
 
 `donation_receipt_template.docx` 파일이 필요합니다.
 - 기존 영수증 양식이 있다면 `{{name}}`, `{{total}}` 같은 placeholder만 추가
-- 자세한 방법: [템플릿_만들기_가이드.md](tax_return/템플릿_만들기_가이드.md)
+- 자세한 방법: [템플릿_만들기_가이드.md](tax_return/docs/템플릿_만들기_가이드.md)
 
 ### Step 3: 영수증 발행
 
@@ -150,8 +150,10 @@ oikos/
 ├── tax_return/                    # 기부금 영수증 시스템
 │   ├── generate_receipts.py       # 메인 스크립트
 │   ├── mcp_server/                # MCP 서버 (Claude Desktop용)
-│   ├── README.md                  # 상세 문서
-│   └── ...
+│   ├── tests/                     # 테스트 코드
+│   ├── deploy/                    # 배포 관련 (Docker, 설치 스크립트)
+│   ├── docs/                      # 문서
+│   └── README.md                  # 상세 문서
 └── examples/                      # 기타 예제
 ```
 
@@ -161,9 +163,9 @@ oikos/
 
 | 문서 | 설명 |
 |------|------|
-| [시작하기 가이드](tax_return/시작하기_가이드.md) | 처음 사용자를 위한 단계별 안내 |
-| [MCP 사용 가이드](tax_return/MCP_사용가이드.md) | Claude Desktop에서 사용하는 방법 |
-| [템플릿 만들기 가이드](tax_return/템플릿_만들기_가이드.md) | 영수증 템플릿 작성 방법 |
+| [시작하기 가이드](tax_return/docs/시작하기_가이드.md) | 처음 사용자를 위한 단계별 안내 |
+| [MCP 사용 가이드](tax_return/docs/MCP_사용가이드.md) | Claude Desktop에서 사용하는 방법 |
+| [템플릿 만들기 가이드](tax_return/docs/템플릿_만들기_가이드.md) | 영수증 템플릿 작성 방법 |
 | [상세 README](tax_return/README.md) | 모든 옵션과 기능 설명 |
 
 ---

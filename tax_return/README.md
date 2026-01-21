@@ -37,7 +37,7 @@ Claude Desktop에서 자연어로 영수증을 발행할 수 있습니다.
 
 2. **아래 명령어 복사해서 붙여넣기**
    ```bash
-   curl -sL https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/install.sh | bash
+   curl -sL https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/deploy/install.sh | bash
    ```
 
 3. **Enter 누르고 기다리기** (설치는 1-2분 정도 걸려요)
@@ -50,7 +50,7 @@ Claude Desktop에서 자연어로 영수증을 발행할 수 있습니다.
 
 2. **아래 명령어 복사해서 붙여넣기**
    ```powershell
-   irm https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/install.ps1 | iex
+   irm https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/deploy/install.ps1 | iex
    ```
 
 3. **Enter 누르고 기다리기**
@@ -99,7 +99,7 @@ Claude: 완료! 94개의 영수증이 receipts 폴더에 생성되었어요.
 | `get_history` | 발행 이력 조회 | "지금까지 뭐 발행했어?" |
 | `get_person_history` | 특정인 이력 조회 | "홍길동 언제 발행했었지?" |
 
-> 자세한 내용: [DOCKER.md](DOCKER.md), [MCP_사용가이드.md](MCP_사용가이드.md)
+> 자세한 내용: [DOCKER.md](docs/DOCKER.md), [MCP_사용가이드.md](docs/MCP_사용가이드.md)
 
 ---
 
@@ -180,7 +180,7 @@ python generate_receipts.py -n 홍길동 --data sample_income_summary.xlsx
 
 ### 실제 사용 준비
 
-1. **템플릿 준비**: [템플릿_만들기_가이드.md](템플릿_만들기_가이드.md) 참고
+1. **템플릿 준비**: [템플릿_만들기_가이드.md](docs/템플릿_만들기_가이드.md) 참고
 2. **데이터 준비**: Excel 파일에 헌금 데이터 입력 (`YYYY_income_summary.xlsx`)
 3. **설정 (선택)**: `config.sample.yaml` → `config.yaml` 복사 후 수정
 
@@ -362,7 +362,9 @@ tax_return/
 ├── sample_income_summary.xlsx    # 샘플 헌금 데이터
 ├── config.sample.yaml            # 설정 파일 샘플
 ├── mcp_server/                   # MCP 서버 (Claude Desktop용)
-├── 템플릿_만들기_가이드.md         # 템플릿 작성 가이드
+├── tests/                        # 테스트 코드
+├── deploy/                       # 배포 파일 (Docker, 설치 스크립트)
+├── docs/                         # 문서
 ├── receipts/                     # 생성된 영수증 폴더
 └── README.md                     # 이 문서
 ```

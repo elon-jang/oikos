@@ -1,7 +1,9 @@
 # 기부금 영수증 MCP 서버 Docker 이미지
 #
-# 빌드: docker build -t oikos-receipt .
+# 빌드: docker build -f deploy/Dockerfile -t oikos-receipt .
 # 실행: docker run -i -v /path/to/data:/data oikos-receipt
+#
+# 주의: tax_return/ 디렉토리에서 빌드해야 합니다.
 
 FROM python:3.11-slim
 
