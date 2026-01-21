@@ -43,7 +43,7 @@ mcp = FastMCP(
 
 # 영수증 도구 등록
 @mcp.tool()
-def tool_list_recipients(data_file: str = None) -> dict:
+def list_donation_recipients(data_file: str = None) -> dict:
     """
     영수증 발행 대상자 목록을 조회합니다.
 
@@ -57,7 +57,7 @@ def tool_list_recipients(data_file: str = None) -> dict:
 
 
 @mcp.tool()
-def tool_generate_receipt(name: str, data_file: str = None, template_file: str = None) -> dict:
+def generate_donation_receipt(name: str, data_file: str = None, template_file: str = None) -> dict:
     """
     특정 사람의 기부금 영수증을 생성합니다.
 
@@ -73,7 +73,7 @@ def tool_generate_receipt(name: str, data_file: str = None, template_file: str =
 
 
 @mcp.tool()
-def tool_generate_all_receipts(
+def generate_all_donation_receipts(
     data_file: str = None,
     template_file: str = None,
     confirm: bool = False
@@ -93,7 +93,7 @@ def tool_generate_all_receipts(
 
 
 @mcp.tool()
-def tool_preview_receipt(name: str, data_file: str = None) -> dict:
+def preview_donation_receipt(name: str, data_file: str = None) -> dict:
     """
     영수증 내용을 미리봅니다 (파일 생성 없이).
 
@@ -109,7 +109,7 @@ def tool_preview_receipt(name: str, data_file: str = None) -> dict:
 
 # 검증 도구 등록
 @mcp.tool()
-def tool_validate_data(data_file: str = None) -> dict:
+def validate_donation_data(data_file: str = None) -> dict:
     """
     데이터 파일의 유효성을 검사합니다.
 
@@ -123,7 +123,7 @@ def tool_validate_data(data_file: str = None) -> dict:
 
 
 @mcp.tool()
-def tool_validate_template(template_file: str = None) -> dict:
+def validate_receipt_template(template_file: str = None) -> dict:
     """
     템플릿 파일의 유효성을 검사합니다.
 
@@ -138,7 +138,7 @@ def tool_validate_template(template_file: str = None) -> dict:
 
 # 이력 도구 등록
 @mcp.tool()
-def tool_get_history(year: int = None) -> dict:
+def get_receipt_history(year: int = None) -> dict:
     """
     영수증 발행 이력을 조회합니다.
 
@@ -152,7 +152,7 @@ def tool_get_history(year: int = None) -> dict:
 
 
 @mcp.tool()
-def tool_get_person_history(name: str, year: int = None) -> dict:
+def get_person_receipt_history(name: str, year: int = None) -> dict:
     """
     특정 사람의 영수증 발행 이력을 조회합니다.
 
