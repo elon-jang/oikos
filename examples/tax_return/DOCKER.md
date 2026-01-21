@@ -178,8 +178,8 @@ docker build -t oikos-receipt .
 
 ```bash
 # Docker Hub에서 이미지 받기
-docker pull elonj/oikos-receipt:latest
+docker pull joomanba/oikos-receipt:latest
 
 # Claude Desktop 설정에서 이미지 이름 변경
-"oikos-receipt:latest" → "elonj/oikos-receipt:latest"
+"oikos-receipt:latest" → "joomanba/oikos-receipt:latest"
 ```

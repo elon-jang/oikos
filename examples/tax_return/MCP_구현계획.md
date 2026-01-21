@@ -165,7 +165,7 @@ CMD ["python", "-m", "mcp_server.server"]
   - `vX.Y.Z` - 버전별 태그
 - [ ] 이미지 푸시
   ```bash
-  docker push elonj/oikos-receipt:latest
+  docker push joomanba/oikos-receipt:latest
   ```
 - [ ] README 작성 (Docker Hub용)
 
@@ -302,7 +302,7 @@ mcp.include_router(history.router)
       "args": [
         "run", "-i", "--rm",
         "-v", "/Users/사용자/기부금영수증:/data",
-        "elonj/oikos-receipt:latest"
+        "joomanba/oikos-receipt:latest"
       ]
     }
   }

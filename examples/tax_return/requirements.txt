@@ -9,6 +9,7 @@ docxtpl>=0.16.0
 
 # MCP 서버
 mcp>=1.0.0
+fastmcp>=0.1.0
 
 # 설정 파일 (선택)
 pyyaml>=6.0
