@@ -14,7 +14,7 @@ Docker를 사용하면 Python 환경 설정 없이 MCP 서버를 실행할 수 �
 
 ```bash
 # 프로젝트 폴더에서 실행
-cd examples/tax_return
+cd tax_return
 docker build -t oikos-receipt .
 ```
 

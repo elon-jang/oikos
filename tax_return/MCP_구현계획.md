@@ -37,7 +37,7 @@
 
 **목표 구조:**
 ```
-examples/tax_return/
+tax_return/
 ├── mcp_server/
 │   ├── __init__.py
 │   ├── server.py

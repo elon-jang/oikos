@@ -25,7 +25,7 @@ Claude Code 활용 예제 모음입니다.
 | 3. 문서 자동화 | 엑셀 데이터로 Word 문서 자동 생성 |
 | 4. 웹 크롤링 | 웹사이트 데이터 수집 |
 
-### 2. 기부금 영수증 시스템 (`examples/tax_return`)
+### 2. 기부금 영수증 시스템 (`tax_return`)
 
 교회 기부금 영수증 자동 발행 시스템
 
@@ -37,7 +37,7 @@ Claude Code 활용 예제 모음입니다.
 
 **사용법**:
 ```bash
-cd examples/tax_return
+cd tax_return
 pip install pandas openpyxl docxtpl
 
 # 전체 발행
@@ -50,7 +50,7 @@ python generate_receipts.py -n 홍길동
 python generate_receipts.py --history
 ```
 
-자세한 내용은 [examples/tax_return/README.md](examples/tax_return/README.md) 참고
+자세한 내용은 [tax_return/README.md](tax_return/README.md) 참고
 
 ## 환경
 

@@ -20,12 +20,12 @@ Claude Desktop에서 자연어로 영수증을 발행할 수 있습니다.
 
 **macOS:**
 ```bash
-curl -sL https://raw.githubusercontent.com/elon-jang/oikos/master/examples/tax_return/install.sh | bash
+curl -sL https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/elon-jang/oikos/master/examples/tax_return/install.ps1 | iex
+irm https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/install.ps1 | iex
 ```
 
 **GUI 설치 도우미:**

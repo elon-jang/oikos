@@ -3,7 +3,7 @@
 # 사용법:
 #   PowerShell에서 실행:
 #   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-#   irm https://raw.githubusercontent.com/elon-jang/oikos/master/examples/tax_return/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/install.ps1 | iex
 #
 
 $ErrorActionPreference = "Stop"
@@ -50,7 +50,7 @@ Set-Location $tempDir
 
 Write-Host "   소스 코드 다운로드 중..."
 git clone --depth 1 https://github.com/elon-jang/oikos.git
-Set-Location oikos/examples/tax_return
+Set-Location oikos/tax_return
 
 Write-Host "   Docker 이미지 빌드 중... (몇 분 소요될 수 있습니다)"
 docker build -t oikos-receipt:latest . | Out-Null

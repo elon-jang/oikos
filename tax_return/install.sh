@@ -3,7 +3,7 @@
 # 기부금 영수증 MCP 서버 설치 스크립트 (macOS)
 #
 # 사용법:
-#   curl -sL https://raw.githubusercontent.com/elon-jang/oikos/master/examples/tax_return/install.sh | bash
+#   curl -sL https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/install.sh | bash
 #
 
 set -e
@@ -54,7 +54,7 @@ cd "$TEMP_DIR"
 
 echo "   소스 코드 다운로드 중..."
 git clone --depth 1 https://github.com/elon-jang/oikos.git
-cd oikos/examples/tax_return
+cd oikos/tax_return
 
 echo "   Docker 이미지 빌드 중... (몇 분 소요될 수 있습니다)"
 docker build -t oikos-receipt:latest . > /dev/null 2>&1

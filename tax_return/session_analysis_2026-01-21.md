@@ -267,7 +267,7 @@ template_file = args.template if args.template else TEMPLATE_FILE
 
 ```bash
 # 1. 현재 상태 확인
-cd /Users/elon/elon/ai/projects/church/oikos/examples/tax_return
+cd /Users/elon/elon/ai/projects/church/oikos/tax_return
 git status
 python generate_receipts.py --list --data sample_income_summary.xlsx
 

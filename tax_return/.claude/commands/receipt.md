@@ -75,10 +75,10 @@ $ARGUMENTS 형식: [작업] [이름]
 
 ### 3. 실행 위치
 
-반드시 `examples/tax_return` 폴더에서 실행해야 합니다.
+반드시 `tax_return` 폴더에서 실행해야 합니다.
 
 ```bash
-cd /Users/elon/elon/ai/projects/church/oikos/examples/tax_return
+cd /Users/elon/elon/ai/projects/church/oikos/tax_return
 python generate_receipts.py [옵션]
 ```
 
