@@ -15,3 +15,12 @@ __pycache__/
 
 # Blog posts (별도 관리)
 blog_*.md
+
+# Session analysis (임시 메모)
+session_analysis_*.md
+
+# Completed plans (완료된 계획)
+*_계획.md
+
+# Test cache
+.pytest_cache/
