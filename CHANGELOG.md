@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-01-21
+
+### Fixed
+- MCP 도구 이름 개선으로 Claude Desktop 호출 문제 해결
+  - `tool_*` 접두사 제거 → 설명적 이름 사용
+  - 예: `tool_list_recipients` → `list_donation_recipients`
+
+### Added
+- MCP 서버 Python 직접 실행 방식 지원
+  - Docker 연결 문제 시 대안으로 권장
+  - pyenv 환경 지원
+- CLAUDE.md 추가 (MCP 베스트 프랙티스 문서)
+
+### Changed
+- Docker 이미지 업데이트 (`joomanba/oikos-receipt:v1.1.0`)
+
+---
+
 ## [1.0.0] - 2026-01-21
 
 ### Added
