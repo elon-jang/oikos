@@ -168,7 +168,7 @@ def tool_get_person_history(name: str, year: int = None) -> dict:
 
 def main():
     """MCP 서버 실행"""
-    mcp.run()
+    mcp.run(transport="stdio", show_banner=False, log_level="ERROR")
 
 
 if __name__ == "__main__":
