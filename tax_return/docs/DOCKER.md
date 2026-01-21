@@ -10,7 +10,14 @@ Docker를 사용하면 Python 환경 설정 없이 MCP 서버를 실행할 수 �
 
 ## 빠른 시작
 
-### 1. Docker 이미지 빌드
+### 1. Docker 이미지 받기
+
+```bash
+# Docker Hub에서 이미지 받기 (권장)
+docker pull joomanba/oikos-receipt:latest
+```
+
+또는 직접 빌드:
 
 ```bash
 # 프로젝트 폴더에서 실행
@@ -44,18 +51,44 @@ cp 2025_income_summary.xlsx ~/donation_receipts/
         "-i",
         "--rm",
         "-v", "/Users/사용자이름/donation_receipts:/data",
-        "oikos-receipt:latest"
+        "joomanba/oikos-receipt:latest"
       ]
     }
   }
 }
 ```
 
-> ⚠️ `/Users/사용자이름/donation_receipts` 부분을 실제 데이터 폴더 경로로 변경하세요.
+> `/Users/사용자이름/donation_receipts` 부분을 실제 데이터 폴더 경로로 변경하세요.
 
 ### 4. Claude Desktop 재시작
 
 Claude Desktop을 완전히 종료한 후 다시 실행합니다.
+
+---
+
+## 설치 테스트
+
+Claude Desktop 실행 전에 터미널에서 먼저 테스트할 수 있습니다.
+
+### 연결 테스트
+
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | \
+  docker run -i --rm -v ~/donation_receipts:/data joomanba/oikos-receipt:latest
+```
+
+성공 시 `"serverInfo":{"name":"oikos-receipt"...}` 응답이 표시됩니다.
+
+### 도구 호출 테스트
+
+```bash
+printf '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}\n{"jsonrpc":"2.0","method":"notifications/initialized"}\n{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_donation_recipients","arguments":{}}}\n' | \
+  docker run -i --rm -v ~/donation_receipts:/data joomanba/oikos-receipt:latest
+```
+
+성공 시 `"count":94,"total_amount":"50,820,000원"` 등 실제 데이터가 표시됩니다.
+
+---
 
 ## 사용 예시
 
@@ -73,43 +106,53 @@ Claude: 홍길동님 영수증이 생성되었습니다.
 Claude: 94명의 영수증을 생성합니다. 계속할까요?
 ```
 
+---
+
+## MCP 도구 목록
+
+| 도구 | 설명 |
+|------|------|
+| `list_donation_recipients` | 대상자 목록 조회 |
+| `generate_donation_receipt` | 특정인 영수증 생성 |
+| `generate_all_donation_receipts` | 전체 영수증 생성 |
+| `preview_donation_receipt` | 영수증 미리보기 |
+| `validate_donation_data` | 데이터 파일 검증 |
+| `validate_receipt_template` | 템플릿 파일 검증 |
+| `get_receipt_history` | 발행 이력 조회 |
+| `get_person_receipt_history` | 특정인 이력 조회 |
+
+---
+
 ## 명령어 레퍼런스
-
-### 이미지 빌드
-
-```bash
-# 기본 빌드
-docker build -t oikos-receipt .
-
-# 버전 태그 추가
-docker build -t oikos-receipt:1.0.0 .
-```
-
-### 수동 실행 (테스트용)
-
-```bash
-# 대화형 실행
-docker run -it --rm \
-  -v ~/donation_receipts:/data \
-  oikos-receipt
-
-# 목록 조회 테스트
-echo '{"method": "tools/call", "params": {"name": "tool_list_recipients"}}' | \
-  docker run -i --rm -v ~/donation_receipts:/data oikos-receipt
-```
 
 ### 이미지 관리
 
 ```bash
+# Docker Hub에서 최신 버전 받기
+docker pull joomanba/oikos-receipt:latest
+
+# 특정 버전 받기
+docker pull joomanba/oikos-receipt:v1.1.0
+
 # 이미지 목록
 docker images | grep oikos
 
 # 이미지 삭제
-docker rmi oikos-receipt
-
-# 캐시 정리
-docker builder prune
+docker rmi joomanba/oikos-receipt:latest
 ```
+
+### 직접 빌드
+
+```bash
+# 기본 빌드
+cd tax_return
+docker build -f deploy/Dockerfile -t oikos-receipt .
+
+# 캐시 없이 새로 빌드
+docker build --no-cache -f deploy/Dockerfile -t oikos-receipt .
+```
+
+---
 
 ## 폴더 구조
 
@@ -123,6 +166,8 @@ docker builder prune
 │   └── ...
 └── 발행대장_2026.xlsx             # 발행 기록
 ```
+
+---
 
 ## 문제 해결
 
@@ -153,33 +198,26 @@ MCP server failed to start
 2. `claude_desktop_config.json` 경로 확인
 3. 볼륨 마운트 경로가 올바른지 확인
 
-### 이미지 빌드 실패
+### Claude Desktop에서 도구 호출 안됨
 
+도구 이름이 올바른지 확인하세요. v1.1.0부터 도구 이름이 변경되었습니다:
+- ~~`tool_list_recipients`~~ → `list_donation_recipients`
+- ~~`tool_generate_receipt`~~ → `generate_donation_receipt`
+
+최신 이미지를 사용하세요:
 ```bash
-# 캐시 없이 새로 빌드
-docker build --no-cache -t oikos-receipt .
+docker pull joomanba/oikos-receipt:latest
 ```
+
+---
 
 ## 업데이트
 
 새 버전이 나오면:
 
 ```bash
-# 최신 코드 받기
-git pull
-
-# 이미지 재빌드
-docker build -t oikos-receipt .
-
-# Claude Desktop 재시작
-```
-
-## Docker Hub에서 받기 (향후)
-
-```bash
-# Docker Hub에서 이미지 받기
+# 최신 이미지 받기
 docker pull joomanba/oikos-receipt:latest
 
-# Claude Desktop 설정에서 이미지 이름 변경
-"oikos-receipt:latest" → "joomanba/oikos-receipt:latest"
+# Claude Desktop 재시작
 ```
