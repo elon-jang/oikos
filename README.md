@@ -7,7 +7,18 @@
 
 ## 기능
 
-### [기부금 영수증 자동 발행](tax_return/README.md)
+| 모듈 | 설명 | 상태 |
+|------|------|------|
+| [tax_return](tax_return/README.md) | 기부금 영수증 자동 발행 | ✅ 완료 |
+| [bulletin](bulletin/) | 주보 자동 생성 | 🔜 예정 |
+| [membership](membership/) | 교적 관리 | 🔜 예정 |
+| [sermon](sermon/) | 설교 요약/정리 | 🔜 예정 |
+| [events](events/) | 행사 안내문 생성 | 🔜 예정 |
+| [finance](finance/) | 재정 보고서 | 🔜 예정 |
+
+---
+
+## 기부금 영수증 자동 발행
 
 Claude Desktop에서 **"홍길동 영수증 발행해줘"** 한마디면 끝!
 
@@ -21,18 +32,14 @@ Claude: 완료! 94개의 영수증이 생성되었어요.
 
 **5분 만에 100명분 영수증 발행 완료!**
 
----
+### 빠른 시작
 
-## 빠른 시작
-
-### Mac
-
+**Mac:**
 ```bash
 curl -sL https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/deploy/install.sh | bash
 ```
 
-### Windows
-
+**Windows:**
 ```powershell
 irm https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/deploy/install.ps1 | iex
 ```
@@ -58,12 +65,13 @@ irm https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/deploy/i
 
 ```
 oikos/
-├── tax_return/          # 기부금 영수증 시스템
-│   ├── mcp_server/      # MCP 서버 (Claude Desktop용)
-│   ├── generate_receipts.py
-│   ├── docs/
-│   └── README.md        # 상세 문서
-└── README.md            # 이 파일
+├── tax_return/      # 기부금 영수증 ✅
+├── bulletin/        # 주보 자동 생성 🔜
+├── membership/      # 교적 관리 🔜
+├── sermon/          # 설교 요약/정리 🔜
+├── events/          # 행사 안내문 🔜
+├── finance/         # 재정 보고서 🔜
+└── README.md
 ```
 
 ---
