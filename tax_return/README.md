@@ -2,64 +2,102 @@
 
 교회, 비영리단체 등에서 사용할 수 있는 기부금 영수증 자동 발행 시스템입니다.
 
-## 설치 방법 선택
+---
 
-| 방법 | 대상 | 난이도 |
-|------|------|--------|
-| [MCP 서버 (Docker)](#mcp-서버-설치) | Claude Desktop 사용자 | ⭐ 쉬움 |
-| [Claude Code 명령어](#claude-code-명령어) | Claude Code 사용자 | ⭐ 쉬움 |
-| [Python 직접 실행](#빠른-시작) | 개발자 | ⭐⭐ 보통 |
+## 어떤 방법을 선택할까요?
+
+| 방법 | 이런 분께 추천 | 난이도 |
+|------|---------------|--------|
+| [MCP 서버 (Docker)](#mcp-서버-설치) | Claude Desktop 사용자, **가장 쉬움!** | ⭐ |
+| [Claude Code 명령어](#claude-code-명령어) | 개발자, Claude Code 사용자 | ⭐ |
+| [Python 직접 실행](#python-직접-실행) | 개발자, 커스터마이징 원하시는 분 | ⭐⭐ |
 
 ---
 
 ## MCP 서버 설치
 
+> **"Claude야, 영수증 만들어줘!"** 한마디면 끝!
+
 Claude Desktop에서 자연어로 영수증을 발행할 수 있습니다.
+
+### 설치하기 전에
+
+**Docker Desktop**이 필요합니다. 아직 설치 안 하셨다면:
+1. [Docker Desktop 다운로드](https://www.docker.com/products/docker-desktop/) 페이지 방문
+2. 운영체제에 맞는 버전 다운로드
+3. 설치 후 실행 (처음 실행 시 1-2분 걸릴 수 있어요)
 
 ### 원클릭 설치
 
-**macOS:**
-```bash
-curl -sL https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/install.sh | bash
+#### Mac 사용자
+
+1. **터미널 앱 열기**
+   - `Cmd + Space` 누르고 "터미널" 입력 후 Enter
+   - 또는 `응용 프로그램 > 유틸리티 > 터미널`
+
+2. **아래 명령어 복사해서 붙여넣기**
+   ```bash
+   curl -sL https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/install.sh | bash
+   ```
+
+3. **Enter 누르고 기다리기** (설치는 1-2분 정도 걸려요)
+
+#### Windows 사용자
+
+1. **PowerShell 열기**
+   - `Win + X` 누르고 "Windows PowerShell (관리자)" 선택
+   - 또는 시작 메뉴에서 "PowerShell" 검색 후 "관리자 권한으로 실행"
+
+2. **아래 명령어 복사해서 붙여넣기**
+   ```powershell
+   irm https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/install.ps1 | iex
+   ```
+
+3. **Enter 누르고 기다리기**
+
+### 설치 완료 후
+
+설치가 완료되면:
+- Mac: `~/기부금영수증/` 폴더가 생성됩니다
+- Windows: `내 문서\기부금영수증\` 폴더가 생성됩니다
+
+이 폴더에 다음 파일들을 넣어주세요:
+- 헌금 데이터 파일 (`2025_income_summary.xlsx`)
+- 영수증 템플릿 (`donation_receipt_template.docx`)
+
+그런 다음 **Claude Desktop을 재시작**하면 사용 준비 완료!
+
+### 사용 예시
+
+Claude Desktop을 열고 이렇게 말해보세요:
+
 ```
+나: 영수증 발행 대상자가 몇 명이야?
+Claude: 총 94명의 대상자가 있습니다. 전체 헌금 총액은 45,000,000원입니다.
 
-**Windows (PowerShell):**
-```powershell
-irm https://raw.githubusercontent.com/elon-jang/oikos/master/tax_return/install.ps1 | iex
-```
-
-**GUI 설치 도우미:**
-```bash
-# Python 3.8+ 필요
-python install_gui.py
-```
-
-### 사용 예시 (Claude Desktop)
-
-```
-사용자: 영수증 발행 대상자가 몇 명이야?
-Claude: 총 94명의 대상자가 있습니다.
-
-사용자: 홍길동 영수증 발행해줘
-Claude: 홍길동님 영수증이 생성되었습니다.
+나: 홍길동 영수증 발행해줘
+Claude: 홍길동님 영수증이 생성되었습니다!
         파일: ~/기부금영수증/receipts/기부금영수증_홍길동.docx
 
-사용자: 전체 영수증 발행해줘
+나: 전체 영수증 발행해줘
 Claude: 94명의 영수증을 생성합니다. 계속할까요?
+
+나: 응!
+Claude: 완료! 94개의 영수증이 receipts 폴더에 생성되었어요.
 ```
 
 ### MCP 도구 목록
 
-| 도구 | 설명 |
-|------|------|
-| `list_recipients` | 대상자 목록 조회 |
-| `generate_receipt` | 특정인 영수증 생성 |
-| `generate_all_receipts` | 전체 영수증 생성 |
-| `preview_receipt` | 영수증 미리보기 |
-| `validate_data` | 데이터 파일 검증 |
-| `validate_template` | 템플릿 파일 검증 |
-| `get_history` | 발행 이력 조회 |
-| `get_person_history` | 특정인 이력 조회 |
+| 도구 | 설명 | 사용 예시 |
+|------|------|----------|
+| `list_recipients` | 대상자 목록 조회 | "누가 영수증 받아야 해?" |
+| `generate_receipt` | 특정인 영수증 생성 | "홍길동 영수증 만들어줘" |
+| `generate_all_receipts` | 전체 영수증 생성 | "전체 영수증 발행해" |
+| `preview_receipt` | 영수증 미리보기 | "홍길동 영수증 미리 보여줘" |
+| `validate_data` | 데이터 파일 검증 | "데이터 파일 확인해줘" |
+| `validate_template` | 템플릿 파일 검증 | "템플릿 괜찮은지 봐줘" |
+| `get_history` | 발행 이력 조회 | "지금까지 뭐 발행했어?" |
+| `get_person_history` | 특정인 이력 조회 | "홍길동 언제 발행했었지?" |
 
 > 자세한 내용: [DOCKER.md](DOCKER.md), [MCP_사용가이드.md](MCP_사용가이드.md)
 
@@ -67,43 +105,82 @@ Claude: 94명의 영수증을 생성합니다. 계속할까요?
 
 ## Claude Code 명령어
 
-`/receipt` 명령어로 간편하게 사용할 수 있습니다.
+> `/receipt` 한 번이면 영수증 발행 끝!
 
 ### 플러그인 설치
 
 ```bash
-# 1. 마켓플레이스 추가
+# 1. 마켓플레이스 추가 (한 번만)
 /plugin marketplace add elon-jang/claude-plugins
 
 # 2. 플러그인 설치
 /plugin install oikos@elon-jang
 ```
 
-> 플러그인 설치 방법: [claude-plugins README](https://github.com/elon-jang/claude-plugins/blob/master/README.md)
-
 ### 명령어 사용법
 
 ```bash
-/receipt generate        # 전체 발행
-/receipt generate 홍길동  # 특정인 발행
-/receipt list            # 대상자 목록
-/receipt history         # 발행 이력
-/receipt history 강신애   # 특정인 이력
+# 전체 영수증 발행
+/receipt generate
+
+# 특정인 발행 - 홍길동님 영수증만!
+/receipt generate 홍길동
+
+# 여러 명 한번에
+/receipt generate 홍길동,김철수,이영희
+
+# 대상자 목록 확인
+/receipt list
+
+# 발행 이력 확인
+/receipt history
+
+# 특정인 이력 확인
+/receipt history 강신애
+
+# 다른 템플릿 사용
+/receipt generate --template my_template.docx
+
+# 다른 데이터 파일 사용
+/receipt list --data sample_income_summary.xlsx
 ```
 
-## 빠른 시작
+> 플러그인 설치 방법: [claude-plugins README](https://github.com/elon-jang/claude-plugins/blob/master/README.md)
 
-### 1. 샘플로 테스트하기
+---
+
+## Python 직접 실행
+
+> 개발자라면 Python으로 직접 컨트롤!
+
+### 설치
 
 ```bash
-# 샘플 데이터로 테스트
+# 필수 패키지
+pip install pandas openpyxl docxtpl
+
+# 설정 파일 사용 시 (선택)
+pip install pyyaml
+
+# PDF 변환 기능 사용 시 (선택)
+pip install docx2pdf  # Microsoft Word 필요
+# 또는
+brew install libreoffice  # macOS
+```
+
+### 빠른 시작
+
+```bash
+# 샘플 데이터로 테스트해보기
 python generate_receipts.py --list --data sample_income_summary.xlsx
+
+# 한 명만 발행해보기
 python generate_receipts.py -n 홍길동 --data sample_income_summary.xlsx
 ```
 
-### 2. 실제 사용 준비
+### 실제 사용 준비
 
-1. **템플릿 준비**: `템플릿_만들기_가이드.md` 참고하여 Word 템플릿 작성
+1. **템플릿 준비**: [템플릿_만들기_가이드.md](템플릿_만들기_가이드.md) 참고
 2. **데이터 준비**: Excel 파일에 헌금 데이터 입력 (`YYYY_income_summary.xlsx`)
 3. **설정 (선택)**: `config.sample.yaml` → `config.yaml` 복사 후 수정
 
@@ -111,38 +188,11 @@ python generate_receipts.py -n 홍길동 --data sample_income_summary.xlsx
 # 설정 파일 복사
 cp config.sample.yaml config.yaml
 
-# 영수증 생성
+# 영수증 생성!
 python generate_receipts.py
 ```
 
-## 파일 구조
-
-```
-tax_return/
-├── generate_receipts.py          # 영수증 생성 스크립트
-├── donation_receipt_template.docx # 영수증 템플릿 (직접 작성)
-├── sample_income_summary.xlsx    # 샘플 헌금 데이터
-├── config.sample.yaml            # 설정 파일 샘플
-├── 템플릿_만들기_가이드.md         # 템플릿 작성 가이드
-├── receipts/                     # 생성된 영수증 폴더
-└── README.md                     # 이 문서
-```
-
-## 설치
-
-```bash
-pip install pandas openpyxl docxtpl
-
-# 설정 파일 사용 시 (선택)
-pip install pyyaml
-
-# PDF 변환 기능 사용 시 (선택)
-pip install docx2pdf  # Word 설치 필요
-# 또는
-brew install libreoffice  # macOS
-```
-
-## 사용법
+### 명령어 옵션
 
 ```bash
 # 전체 발행 (자동 연도 감지)
@@ -163,6 +213,9 @@ python generate_receipts.py --year 2025
 # 다른 데이터 파일 사용
 python generate_receipts.py --data 2024_income_summary.xlsx
 
+# 다른 템플릿 사용
+python generate_receipts.py --template my_template.docx
+
 # 발행 이력 조회
 python generate_receipts.py --history
 
@@ -171,34 +224,39 @@ python generate_receipts.py --history -n 강신애
 
 # PDF로 변환 (DOCX도 유지)
 python generate_receipts.py --pdf
-python generate_receipts.py -n 홍길동 --pdf
 ```
 
-### 옵션
+### 옵션 정리
 
-| 옵션               | 설명             | 예시                            |
-| ------------------ | ---------------- | ------------------------------- |
-| (없음)             | 전체 발행 (자동 연도) | `python generate_receipts.py` |
-| `-n 이름`        | 지정 인원만 발행 | `-n 홍길동`                   |
-| `-n 이름1,이름2` | 여러 명 발행     | `-n 홍길동,김철수`            |
-| `--list`         | 대상자 목록 출력 | `--list`                      |
-| `--year 연도`    | 데이터 연도 수동 지정 | `--year 2025`               |
-| `--data 파일`    | 데이터 파일 직접 지정 | `--data 2024_income_summary.xlsx` |
-| `--history`      | 발행 이력 조회   | `--history`                   |
-| `--history -n 이름` | 특정인 이력 조회 | `--history -n 강신애`         |
+| 옵션 | 설명 | 예시 |
+|------|------|------|
+| (없음) | 전체 발행 (자동 연도) | `python generate_receipts.py` |
+| `-n 이름` | 지정 인원만 발행 | `-n 홍길동` |
+| `-n 이름1,이름2` | 여러 명 발행 | `-n 홍길동,김철수` |
+| `--list` | 대상자 목록 출력 | `--list` |
+| `--year 연도` | 데이터 연도 수동 지정 | `--year 2025` |
+| `--data 파일` | 데이터 파일 직접 지정 | `--data 2024_income_summary.xlsx` |
 | `--template 파일` | 템플릿 파일 지정 | `--template my_template.docx` |
-| `--pdf`          | PDF로 변환 (DOCX 유지) | `--pdf`                  |
+| `--history` | 발행 이력 조회 | `--history` |
+| `--history -n 이름` | 특정인 이력 조회 | `--history -n 강신애` |
+| `--pdf` | PDF로 변환 (DOCX 유지) | `--pdf` |
+
+---
 
 ## 입력 데이터
 
-### 헌금 데이터 (`YYYY_income_summary.xlsx`)
+### 헌금 데이터 파일 (`YYYY_income_summary.xlsx`)
 
-| 이름          | 1월    | 2월    | ... | 12월   | 연간 총합 |
-| ------------- | ------ | ------ | --- | ------ | --------- |
-| 강신애,최정호 | 50,000 | 30,000 | ... | 20,000 | 350,000   |
+| 이름 | 1월 | 2월 | ... | 12월 | 연간 총합 |
+|------|-----|-----|-----|------|----------|
+| 강신애 | 50,000 | 30,000 | ... | 20,000 | 350,000 |
+| 홍길동,김영희 | 100,000 | 100,000 | ... | 100,000 | 1,200,000 |
 
-- **부부 이름**: 쉼표로 구분 → 각각 별도 영수증 발행 (동일 금액)
-- **합계 행**: 자동 제외
+**포인트:**
+- **부부 이름**: 쉼표로 구분하면 각각 별도 영수증 발행! (금액은 동일)
+- **합계 행**: 자동으로 제외됩니다
+
+---
 
 ## 템플릿
 
@@ -208,56 +266,47 @@ python generate_receipts.py -n 홍길동 --pdf
 
 ### Placeholder 목록
 
-| Placeholder        | 위치           | 설명              | 예시    |
-| ------------------ | -------------- | ----------------- | ------- |
-| `{{receipt_no}}` | Table 1        | 발급번호          | 26-001  |
-| `{{name}}`       | Table 2, 문단  | 기부자 성명 (2곳) | 홍길동  |
-| `{{month_1}}`    | Table 4 Row 1  | 1월 금액          | 50,000  |
-| `{{month_2}}`    | Table 4 Row 2  | 2월 금액          | 50,000  |
-| ...                | ...            | ...               | ...     |
-| `{{month_12}}`   | Table 4 Row 12 | 12월 금액         | 50,000  |
-| `{{total}}`      | Table 4 Row 13 | 연간 총합         | 450,000 |
+| Placeholder | 설명 | 예시 |
+|-------------|------|------|
+| `{{receipt_no}}` | 발급번호 | 26-001 |
+| `{{name}}` | 기부자 성명 | 홍길동 |
+| `{{month_1}}` ~ `{{month_12}}` | 월별 금액 | 50,000 |
+| `{{total}}` | 연간 총합 | 450,000 |
 
 ### 주의사항
 
 - **A4 한 장 유지**: 여백, 폰트 크기 조절 시 주의
-- **셀 병합**: 변경 시 레이아웃 깨질 수 있음
-- **{{name}} 2곳**: Table 2와 하단 서명란에 각각 있음
-- **연도 변경**: Table 4의 "2026년 1월" 및 하단 날짜 수정 필요
+- **`{{name}}`은 2곳**: Table과 하단 서명란에 각각 있어요
+- **연도 변경**: 템플릿 내 연도 직접 수정 필요
 
-## 출력
+---
 
-- **형식**: DOCX (Word 문서), PDF (--pdf 옵션 사용 시)
-- **파일명**: `기부금영수증_이름.docx` (또는 `.pdf`)
-- **위치**: `receipts/` 폴더
+## 발급번호 규칙
 
-## 주민등록번호/주소 처리
+- 형식: `YY-NNN` (예: `26-001`)
+- 2025년 데이터 → `26-XXX` (발급 연도는 데이터 연도 + 1)
+- 이름 가나다순 정렬 후 순차 부여
 
-**빈칸으로 유지** - 수령인이 연말정산 시 직접 기입
+---
 
-## 연간 작업 순서
+## 발행대장
 
-1. **원본 데이터 정리** (`헌금정리_프롬프트.md` 참고)
+영수증 발행 시 자동으로 `발행대장_YYYY.xlsx` 파일에 기록됩니다.
 
-   - 이름 통합 (오타, 구분자)
-   - 비개인 항목 제외 (셀, 무명 등)
-   - 총액 검증
-2. **영수증 생성**
+### 대장 컬럼
 
-   ```bash
-   python generate_receipts.py
-   ```
-3. **검증**
+| 컬럼 | 설명 | 예시 |
+|------|------|------|
+| 발급번호 | 영수증 번호 | 26-001 |
+| 이름 | 기부자명 | 강신애 |
+| 연간총합 | 헌금 총액 | 450,000 |
+| 발행일시 | 발행 시간 | 2026-01-20 18:30:00 |
+| 파일경로 | 생성된 파일 | receipts/기부금영수증_강신애.docx |
+| 비고 | 재발행 등 | 재발행 |
 
-   - 샘플 파일 열어서 확인
-   - 총 인원수 확인 (부부 분리 반영)
-4. **배포**
-
-   - DOCX 파일 인쇄 또는 이메일 발송
+---
 
 ## 설정 파일 (config.yaml)
-
-설정 파일로 단체 정보와 파일 경로를 커스터마이징할 수 있습니다.
 
 ```bash
 cp config.sample.yaml config.yaml
@@ -277,73 +326,78 @@ receipt:
   prefix: ""  # 발급번호 접두사 (예: "A" → "A26-001")
 ```
 
-> 설정 파일이 없으면 기본값을 사용합니다.
-> YAML 파싱을 위해 `pip install pyyaml` 필요
+---
 
-## 발급번호 규칙
+## 연간 작업 순서
 
-- 형식: `[접두사]YY-NNN`
-- 예: `26-001` (2026년 첫 번째 영수증)
-- 접두사 설정 시: `A26-001`
-- 이름 가나다순 정렬 후 순차 부여
-- 연도는 데이터 파일 연도 + 1 (예: 2025 데이터 → 26-XXX)
+### 1단계: 원본 데이터 정리
 
-## 발행대장
+- 이름 통합 (오타, 구분자)
+- 비개인 항목 제외 (셀, 무명 등)
+- 총액 검증
 
-영수증 발행 시 자동으로 `발행대장_YYYY.xlsx` 파일에 기록됩니다.
-
-### 대장 컬럼
-
-| 컬럼 | 설명 | 예시 |
-|------|------|------|
-| 발급번호 | 영수증 번호 | 26-001 |
-| 이름 | 기부자명 | 강신애 |
-| 연간총합 | 헌금 총액 | 450,000 |
-| 발행일시 | 발행 시간 | 2026-01-20 18:30:00 |
-| 파일경로 | 생성된 파일 | receipts/기부금영수증_강신애.docx |
-| 비고 | 재발행 등 | 재발행 |
-
-### 이력 조회
+### 2단계: 영수증 생성
 
 ```bash
-python generate_receipts.py --history           # 전체 이력
-python generate_receipts.py --history -n 강신애  # 특정인 이력
+python generate_receipts.py
 ```
 
-## 템플릿 수정 시 주의사항
+### 3단계: 검증
 
-1. Placeholder는 `{{변수명}}` 형식 유지
-2. A4 한 장에 맞게 여백/폰트 조절
-3. 수정 후 테스트 실행 필수
+- 샘플 파일 열어서 확인
+- 총 인원수 확인 (부부 분리 반영)
+
+### 4단계: 배포
+
+- DOCX 파일 인쇄 또는 이메일 발송
+
+---
+
+## 파일 구조
+
+```
+tax_return/
+├── generate_receipts.py          # 영수증 생성 스크립트
+├── donation_receipt_template.docx # 영수증 템플릿 (직접 작성)
+├── sample_income_summary.xlsx    # 샘플 헌금 데이터
+├── config.sample.yaml            # 설정 파일 샘플
+├── mcp_server/                   # MCP 서버 (Claude Desktop용)
+├── 템플릿_만들기_가이드.md         # 템플릿 작성 가이드
+├── receipts/                     # 생성된 영수증 폴더
+└── README.md                     # 이 문서
+```
+
+---
 
 ## 문제 해결
 
-### 오류: 템플릿 파일이 없습니다
+### 템플릿 파일이 없습니다
 
-- `donation_receipt_template.docx` 파일이 프로젝트 폴더에 있는지 확인
+`donation_receipt_template.docx` 파일이 프로젝트 폴더에 있는지 확인하세요.
 
-### 오류: 데이터 파일을 찾을 수 없습니다
+### 데이터 파일을 찾을 수 없습니다
 
-- `YYYY_income_summary.xlsx` 형식의 파일이 필요
-- 또는 `--data 파일경로` 옵션으로 직접 지정
+`YYYY_income_summary.xlsx` 형식의 파일이 필요합니다.
+또는 `--data 파일경로` 옵션으로 직접 지정하세요.
 
-### 오류: 필수 컬럼이 없습니다
+### 필수 컬럼이 없습니다
 
-- Excel 파일에 필수 컬럼 확인: `이름`, `1월`~`12월`, `연간 총합`
+Excel 파일에 필수 컬럼이 있는지 확인하세요:
+- `이름`, `1월`~`12월`, `연간 총합`
 
-### 오류: `TemplateSyntaxError`
+### TemplateSyntaxError
 
-- 템플릿의 placeholder 문법 확인 (`}}` 누락 등)
-
-### 금액이 표시되지 않음
-
-- Excel 데이터의 컬럼명 확인 (`1월`, `2월` 등)
+템플릿의 placeholder 문법을 확인하세요. (`}}` 누락 등)
 
 ### 부부가 분리되지 않음
 
-- 이름에 쉼표(`,`) 사용 확인 (마침표 아님)
+이름에 쉼표(`,`)를 사용했는지 확인하세요. (마침표 아님!)
 
 ### PDF 변환 실패
 
 - `docx2pdf` 설치: `pip install docx2pdf` (Microsoft Word 필요)
 - 또는 LibreOffice 설치: `brew install libreoffice` (macOS)
+
+---
+
+**Made with love for church communities**
