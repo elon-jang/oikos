@@ -70,6 +70,79 @@ OAuth 로그인은 여러 번 리다이렉트된다. Google → Okta → 다시 
 
 ---
 
+## 3.5막: 세션 저장의 마법
+
+여기서 핵심은 `storageState`다. 이 한 줄이 MFA 지옥에서 우리를 구원한다.
+
+```javascript
+await context.storageState({ path: 'auth.json' });
+```
+
+**auth.json에 뭐가 저장되나?**
+
+```json
+{
+  "cookies": [
+    {
+      "name": "session_token",
+      "value": "eyJhbGciOiJIUzI1NiIs...",
+      "domain": ".example.com",
+      "path": "/",
+      "expires": 1737619200,
+      "httpOnly": true,
+      "secure": true
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://example.com",
+      "localStorage": [
+        { "name": "user_preferences", "value": "{...}" }
+      ]
+    }
+  ]
+}
+```
+
+쿠키와 localStorage가 통째로 저장된다. 다음 실행 때는 이 파일을 불러오면 로그인이 필요 없다.
+
+**세션 재사용하기:**
+
+```javascript
+// 저장된 세션이 있으면 불러오기
+const context = await browser.newContext({
+  storageState: fs.existsSync('auth.json') ? 'auth.json' : undefined
+});
+
+const page = await context.newPage();
+await page.goto(targetUrl);
+
+// 세션이 만료되었으면 (로그인 페이지로 리다이렉트) 다시 로그인
+if (page.url().includes('login')) {
+  console.log('⏳ 세션 만료. 다시 로그인하세요...');
+  await page.waitForURL(targetUrl, { timeout: 300000 });
+  await context.storageState({ path: 'auth.json' });
+  console.log('✅ 새 세션 저장됨');
+}
+```
+
+**이 방식의 장점:**
+
+| 장점 | 설명 |
+|------|------|
+| MFA 우회 | 한 번만 인증하면 끝 |
+| 빠른 시작 | 로그인 과정 스킵 |
+| 자동 갱신 | 만료 시 자동으로 재로그인 유도 |
+| 보안 | auth.json만 .gitignore에 추가하면 됨 |
+
+**주의사항:**
+
+- `auth.json`은 절대 Git에 커밋하지 말 것 (`.gitignore` 필수)
+- 세션 만료 시간은 서비스마다 다름 (보통 24시간 ~ 30일)
+- 회사 보안 정책에 따라 세션 저장이 금지될 수 있음
+
+---
+
 ## 4막: 삭제의 무한 루프
 
 핵심 로직은 놀랍도록 단순하다:
@@ -111,8 +184,9 @@ while (true) {
 1. **Playwright codegen**은 셀렉터 탐색의 최고 도구다
 2. **Chrome 프로필 충돌**이 나면 Firefox로 도망가자
 3. **OAuth 로그인 감지**는 URL 기반이 가장 안정적이다
-4. **접근성 셀렉터**(`getByRole`, `getByLabel`)는 CSS보다 견고하다
-5. **수동 + 자동 하이브리드**가 때로는 최선이다
+4. **storageState**로 세션을 저장하면 MFA도 한 번만 하면 된다
+5. **접근성 셀렉터**(`getByRole`, `getByLabel`)는 CSS보다 견고하다
+6. **수동 + 자동 하이브리드**가 때로는 최선이다
 
 ---
 
