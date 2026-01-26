@@ -1,0 +1,8 @@
+{
+  "name": "offering",
+  "version": "1.0.0",
+  "description": "헌금 전표 이미지를 읽어 Excel 파일로 자동 입력하는 헌금 전표 자동화 플러그인",
+  "author": {
+    "name": "Elon Jang"
+  }
+}
