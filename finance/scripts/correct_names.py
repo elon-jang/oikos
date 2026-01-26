@@ -1,4 +1,4 @@
-"""교인 명부 기반 이름 교정 모듈 (fuzzy matching)."""
+"""교인 명부 기반 이름 교정 모듈 (자모 분해 fuzzy matching)."""
 
 import difflib
 import json
@@ -7,6 +7,45 @@ import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 MEMBERS_FILE = os.path.join(SCRIPT_DIR, "members.txt")
+
+# 한글 자모 테이블
+_CHOSUNG = list("ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ")
+_JUNGSUNG = list("ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ")
+_JONGSUNG = [""] + list("ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ")
+
+
+def decompose_hangul(text: str) -> list[str]:
+    """한글 문자열을 초성/중성/종성 자모 리스트로 분해.
+
+    예: '권언성' → ['ㄱ','ㅝ','ㄴ','ㅇ','ㅓ','ㄴ','ㅅ','ㅓ','ㅇ']
+    """
+    result = []
+    for ch in text:
+        code = ord(ch)
+        if 0xAC00 <= code <= 0xD7A3:
+            offset = code - 0xAC00
+            cho = offset // (21 * 28)
+            jung = (offset % (21 * 28)) // 28
+            jong = offset % 28
+            result.append(_CHOSUNG[cho])
+            result.append(_JUNGSUNG[jung])
+            if jong > 0:
+                result.append(_JONGSUNG[jong])
+        else:
+            result.append(ch)
+    return result
+
+
+def jamo_similarity(a: str, b: str) -> float:
+    """자모 분해 기반 유사도 (0.0 ~ 1.0).
+
+    한글 글자를 초성/중성/종성으로 분해하여 비교하므로,
+    획이 유사한 글자 간의 유사도가 문자 단위 비교보다 정확함.
+    예: 정형모 vs 정형호 → 문자:0.67, 자모:0.875
+    """
+    jamo_a = decompose_hangul(a)
+    jamo_b = decompose_hangul(b)
+    return difflib.SequenceMatcher(None, jamo_a, jamo_b).ratio()
 
 
 def load_members(filepath: str = MEMBERS_FILE) -> list[str]:
@@ -17,7 +56,7 @@ def load_members(filepath: str = MEMBERS_FILE) -> list[str]:
 
 def correct_name(name: str, members: list[str], cutoff: float = 0.5) -> dict:
     """
-    단일 이름을 교인 명부와 대조하여 교정.
+    단일 이름을 교인 명부와 대조하여 교정 (자모 분해 기반).
 
     Returns:
         {
@@ -35,16 +74,17 @@ def correct_name(name: str, members: list[str], cutoff: float = 0.5) -> dict:
     if name in members:
         return {"original": name, "corrected": name, "status": "exact", "confidence": 1.0}
 
-    # fuzzy matching
-    matches = difflib.get_close_matches(name, members, n=1, cutoff=cutoff)
-    if matches:
-        match = matches[0]
-        ratio = difflib.SequenceMatcher(None, name, match).ratio()
+    # 자모 분해 기반 fuzzy matching — 전체 멤버에 대해 유사도 계산
+    scores = [(m, jamo_similarity(name, m)) for m in members]
+    scores.sort(key=lambda x: x[1], reverse=True)
+    best_match, best_score = scores[0]
+
+    if best_score >= cutoff:
         return {
             "original": name,
-            "corrected": match,
+            "corrected": best_match,
             "status": "corrected",
-            "confidence": round(ratio, 2),
+            "confidence": round(best_score, 2),
         }
 
     # 매칭 없음

@@ -21,7 +21,7 @@ commands/
 
 scripts/
 ├── offering_config.py     # 카테고리 → Excel 행 매핑 설정
-├── correct_names.py       # 교인 명부 기반 이름 교정 (difflib)
+├── correct_names.py       # 교인 명부 기반 이름 교정 (자모 분해 fuzzy matching)
 ├── process_offering.py    # 템플릿 생성 / 데이터 입력 / 검증
 └── members.txt            # 교인 명부 (1줄 1명)
 ```
@@ -44,15 +44,19 @@ YYYYMMDD.xlsx (Excel 출력)
 
 ## 핵심 설계 결정
 
-### 1. 이름 교정 (fuzzy matching)
+### 1. 이름 교정 (자모 분해 fuzzy matching)
 
-**구현**: `correct_names.py` — `difflib.get_close_matches(cutoff=0.5)`
+**구현**: `correct_names.py` — 한글 자모(초성/중성/종성) 분해 후 `difflib.SequenceMatcher`
 
-**한계**: 한글 필기체 OCR 특성상 자음/모음 단위 오인식 발생
-- `천인성↔권언성` (ratio=0.33) — cutoff 이하로 자동 매칭 불가, `unknown` 처리
-- `윤선섭↔윤순심` (ratio=0.33) — 마찬가지
+**원리**: 한글 글자를 자모로 분해하여 비교 → 획이 유사한 글자 간 유사도 향상
+- 문자 단위: `정형호↔정형모` = 0.67, `정형호↔최정호` = 0.67 (구분 불가)
+- 자모 단위: `정형호↔정형모` = 0.88, `정형호↔최정호` = 0.67 (정확히 구분)
 
-**대응**: `unknown` 표시 → 사용자 수동 확인 → 신규 교인이면 명부에 추가
+**교정 성공**: `천인성→권언성`, `정형호→정형모`, `이주리→이루리`, `최건웅→최진웅` 등
+
+**한계**: 3음절 이상 오인식 시 교정 불가 (`윤선섭↔윤순심` — 순→선, 심→섭 동시 오인식)
+
+**대응**: `corrected`/`unknown` 표시 → 사용자 수동 확인 → 신규 교인이면 명부에 추가
 
 ### 2. Excel 템플릿 구조 (고정)
 
