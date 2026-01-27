@@ -32,6 +32,8 @@ finance/
 │   ├── offering_config.py        # 카테고리 → Excel 행 매핑 설정
 │   ├── correct_names.py          # 교인 명부 기반 이름 교정 (자모 분해 fuzzy matching)
 │   ├── process_offering.py       # 템플릿 생성 / 데이터 입력 / 검증
+│   ├── gdrive_config.py          # Google Drive API 설정 (폴더 ID, 인증 경로)
+│   ├── gdrive.py                 # Google Drive 연동 (pull/push/list)
 │   └── members.txt               # 교인 명부 (1줄 1명)
 ├── CLAUDE.md
 ├── README.md
@@ -41,6 +43,8 @@ finance/
 ### 데이터 흐름
 
 ```
+Google Drive (gdrive.py pull)
+    ↓ 선택적 다운로드
 입력 (data/YYYY/MMDD/input/ — PDF 또는 JPG)
     ↓ Claude Vision (Read 도구)
 추출 데이터 (이름, 금액, 카테고리)
@@ -52,6 +56,8 @@ finance/
 data/YYYY/MMDD/YYYYMMDD.xlsx (Excel 출력)
     ↓ process_offering.py verify
 검증 결과
+    ↓ 선택적 업로드
+Google Drive (gdrive.py push)
 ```
 
 ## 핵심 설계 결정
@@ -103,6 +109,31 @@ data/YYYY/MMDD/YYYYMMDD.xlsx (Excel 출력)
 - 중복: 이전 페이지와 동일 내용 → 건너뛰기
 - 특별헌금: "송구영신", "헌신예배" 등 → 사용자에게 포함 여부 질문
 
+### 4. Google Drive 연동
+
+**구현**: `gdrive.py` + `gdrive_config.py`
+
+**인증 흐름**:
+1. `gdrive-token.json` 캐시 로드 시도
+2. 만료 시 자동 refresh
+3. 토큰 없으면 `InstalledAppFlow` → 브라우저 인증 → 토큰 저장
+
+**설정 파일** (`gdrive_config.py`):
+- `GDRIVE_FOLDER_ID`: Drive 헌금 전표 폴더 ID (환경 변수 오버라이드 가능)
+- `GDRIVE_CREDENTIALS_PATH`: OAuth Desktop 인증 파일 (`"installed"` key 필수)
+- `GDRIVE_TOKEN_PATH`: 토큰 캐시 (프로젝트 외부 저장)
+- `ALLOWED_EXTENSIONS`: `.pdf`, `.jpg`, `.jpeg`, `.png`
+
+**pull 탐색 순서**:
+1. MMDD 하위 폴더 → 있으면 그 안의 파일 다운로드
+2. 없으면 루트 폴더에서 파일명에 MMDD 포함된 파일 검색
+3. 확장자 필터링 후 `data/YYYY/MMDD/input/`에 저장
+
+**push 동작**:
+1. `data/YYYY/MMDD/YYYYMMDD.xlsx` 존재 확인
+2. MMDD 하위 폴더 있으면 그곳에, 없으면 루트에 업로드
+3. 동일 파일명 존재 시 덮어쓰기 (update), 없으면 신규 생성 (create)
+
 ## CLI 사용법
 
 ```bash
@@ -124,6 +155,11 @@ echo '{"names": ["천인성", "정완구"]}' | python3 scripts/correct_names.py
 
 # 교인 명부에 추가
 python3 scripts/correct_names.py --add "새교인이름"
+
+# Google Drive 연동
+python3 scripts/gdrive.py list              # 폴더 내용 조회
+python3 scripts/gdrive.py pull 0125         # 입력 파일 다운로드
+python3 scripts/gdrive.py push 0125         # 출력 Excel 업로드
 ```
 
 ## 카테고리 변경 시
@@ -136,4 +172,4 @@ python3 scripts/correct_names.py --add "새교인이름"
 
 - **Phase 1** ✅: 폴더 구조 정리, PDF 지원, MMDD 단축
 - **Phase 2** ✅: 중복 감지, 특별헌금 플래그, 카테고리 매핑 개선
-- **Phase 3**: Google Drive API (`scripts/gdrive.py` — pull/push)
+- **Phase 3** ✅: Google Drive API 연동 (`scripts/gdrive.py` — pull/push/list)

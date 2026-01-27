@@ -25,6 +25,19 @@ allowed-tools:
 
 ## 수행 단계
 
+### 0단계: Google Drive 파일 가져오기 (선택)
+
+입력 폴더(`data/{YYYY}/{MMDD}/input/`)가 비어있거나 존재하지 않으면:
+
+1. AskUserQuestion: "입력 폴더가 비어있습니다. Google Drive에서 파일을 가져올까요?"
+   - "예 - Drive에서 다운로드"
+   - "아니오 - 수동으로 파일 넣기"
+2. "예" 선택 시:
+```bash
+python3 scripts/gdrive.py pull $MMDD
+```
+3. 다운로드 결과 확인 후 다음 단계 진행
+
 ### 1단계: 입력 파일 탐색
 
 **날짜 변환:**
@@ -176,6 +189,19 @@ python3 scripts/process_offering.py verify $YYYYMMDD
 ```bash
 python3 scripts/correct_names.py --add "새교인이름"
 ```
+
+### 7단계: Google Drive 업로드 (선택)
+
+검증 완료 후:
+
+1. AskUserQuestion: "Excel 파일을 Google Drive에 업로드할까요?"
+   - "예 - Drive에 업로드"
+   - "아니오 - 로컬만 유지"
+2. "예" 선택 시:
+```bash
+python3 scripts/gdrive.py push $MMDD
+```
+3. 업로드 결과 표시
 
 ---
 
