@@ -1,5 +1,16 @@
 """헌금 카테고리 → Excel 행 매핑 설정."""
 
+# 특별헌금 키워드 (파일명 또는 페이지 내용에 포함 시 특별헌금으로 분류)
+SPECIAL_OFFERING_KEYWORDS = [
+    "송구영신",
+    "헌신예배",
+    "제직헌신",
+    "부활절",
+    "추수감사",
+    "성탄절",
+    "맥추감사",
+]
+
 # 카테고리별 설정: (시작행, 끝행, 슬롯수, 계정코드, 예배코드)
 # 행 번호는 Excel 기준 (1-indexed, 헤더 3행 이후 데이터 시작 = 4행)
 CATEGORIES = {
@@ -26,6 +37,7 @@ CATEGORIES = {
 
 # 카테고리 별칭 매핑 (이미지 OCR에서 다른 이름으로 인식될 수 있는 경우)
 CATEGORY_ALIASES = {
+    # 기존
     "산돌회": "샬롬전도회",
     "주일헌금": "장년부주일",
     "주일학교 헌금": "중고등부",  # 문맥에 따라 다를 수 있음
@@ -36,6 +48,21 @@ CATEGORY_ALIASES = {
     "구제헌금": "구제",
     "월정헌금": "월정선교",
     "선교헌금": "월정선교",
+    # 추가 — 공백/변형
+    "십일조 헌금": "십일조",
+    "감사 헌금": "감사",
+    "생일 감사": "생일감사",
+    "장학 헌금": "장학",
+    "구제 헌금": "구제",
+    "월정 선교": "월정선교",
+    "정기선교": "월정선교",
+    "주일 헌금": "장년부주일",
+    "장년부 주일": "장년부주일",
+    "장년주일": "장년부주일",
+    "산돌전도회": "샬롬전도회",
+    "셀 헌금": "셀헌금",
+    "기타 수입": "기타수입",
+    "통장 이자": "통장이자",
 }
 
 # 카테고리 순서 (Excel 행 순서와 동일)
@@ -43,16 +70,44 @@ CATEGORY_ORDER = list(CATEGORIES.keys())
 
 
 def resolve_category(raw_name: str) -> str | None:
-    """OCR에서 추출한 카테고리명을 정규화된 카테고리명으로 변환."""
+    """OCR에서 추출한 카테고리명을 정규화된 카테고리명으로 변환.
+
+    Returns:
+        정규화된 카테고리명 또는 None (매칭 실패 시).
+    """
     name = raw_name.strip()
-    # 정확히 일치
+    # 1. 정확히 일치
     if name in CATEGORIES:
         return name
-    # 별칭 매핑
+    # 2. 별칭 매핑
     if name in CATEGORY_ALIASES:
         return CATEGORY_ALIASES[name]
-    # 부분 일치 (카테고리명이 포함된 경우)
+    # 3. 공백/특수문자 제거 후 재시도
+    normalized = name.replace(" ", "").replace("·", "")
+    if normalized in CATEGORIES:
+        return normalized
+    for alias, cat in CATEGORY_ALIASES.items():
+        if alias.replace(" ", "") == normalized:
+            return cat
+    # 4. 부분 일치 (카테고리명이 포함된 경우)
     for cat_name in CATEGORIES:
         if cat_name in name:
             return cat_name
     return None
+
+
+def suggest_categories(raw_name: str) -> list[dict]:
+    """카테고리 후보 목록 반환 (resolve 실패 시 사용).
+
+    Returns:
+        [{"category": str, "score": float}, ...] 최대 5건, 점수 내림차순.
+    """
+    name = raw_name.strip().replace(" ", "")
+    suggestions = []
+    for cat_name in CATEGORIES:
+        overlap = sum(1 for c in name if c in cat_name)
+        if overlap >= 1 and len(name) >= 2:
+            score = overlap / max(len(name), len(cat_name))
+            if score >= 0.3:
+                suggestions.append({"category": cat_name, "score": round(score, 2)})
+    return sorted(suggestions, key=lambda x: x["score"], reverse=True)[:5]

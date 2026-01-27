@@ -4,7 +4,7 @@
 
 ## 프로젝트 개요
 
-**목적**: 매주 반복되는 "헌금 전표 이미지 → Excel 입력" 업무를 자동화
+**목적**: 매주 반복되는 "헌금 전표 이미지/PDF → Excel 입력" 업무를 자동화
 
 **핵심 원칙**:
 1. **정확성**: OCR 추출 후 교인 명부 기반 fuzzy matching으로 이름 교정
@@ -13,23 +13,35 @@
 
 ## 아키텍처
 
-### 모듈 구조
+### 폴더 구조
 
 ```
-commands/
-└── process-offering.md    # 슬래시 커맨드 (이미지→추출→확인→Excel)
-
-scripts/
-├── offering_config.py     # 카테고리 → Excel 행 매핑 설정
-├── correct_names.py       # 교인 명부 기반 이름 교정 (자모 분해 fuzzy matching)
-├── process_offering.py    # 템플릿 생성 / 데이터 입력 / 검증
-└── members.txt            # 교인 명부 (1줄 1명)
+finance/
+├── templates/
+│   └── upload_sample.xlsx        # Excel 업로드 템플릿
+├── data/                         # .gitignore 대상
+│   └── 2026/
+│       └── 0125/
+│           ├── input/
+│           │   ├── scan.pdf      # 스캔 PDF
+│           │   └── *.jpg         # 전표 이미지
+│           └── 20260125.xlsx     # 출력 Excel
+├── commands/
+│   └── process-offering.md       # 슬래시 커맨드 (이미지/PDF→추출→확인→Excel)
+├── scripts/
+│   ├── offering_config.py        # 카테고리 → Excel 행 매핑 설정
+│   ├── correct_names.py          # 교인 명부 기반 이름 교정 (자모 분해 fuzzy matching)
+│   ├── process_offering.py       # 템플릿 생성 / 데이터 입력 / 검증
+│   └── members.txt               # 교인 명부 (1줄 1명)
+├── CLAUDE.md
+├── README.md
+└── .gitignore
 ```
 
 ### 데이터 흐름
 
 ```
-이미지 (YYYYMMDD/*.jpg)
+입력 (data/YYYY/MMDD/input/ — PDF 또는 JPG)
     ↓ Claude Vision (Read 도구)
 추출 데이터 (이름, 금액, 카테고리)
     ↓ correct_names.py
@@ -37,7 +49,7 @@ scripts/
     ↓ 사용자 확인 (AskUserQuestion)
 확인된 데이터
     ↓ process_offering.py write
-YYYYMMDD.xlsx (Excel 출력)
+data/YYYY/MMDD/YYYYMMDD.xlsx (Excel 출력)
     ↓ process_offering.py verify
 검증 결과
 ```
@@ -60,7 +72,7 @@ YYYYMMDD.xlsx (Excel 출력)
 
 ### 2. Excel 템플릿 구조 (고정)
 
-**파일**: `2026헌금_업로드샘플.xlsx` (92행, A-H열)
+**파일**: `templates/upload_sample.xlsx` (92행, A-H열)
 - Row 1-3: 헤더
 - Row 4-95: 카테고리별 고정 슬롯 (offering_config.py에 매핑)
 - Column A: 일자 (datetime, mm-dd-yy)
@@ -75,31 +87,37 @@ YYYYMMDD.xlsx (Excel 출력)
 **주의**: 템플릿의 행 구조(카테고리 순서, 슬롯 수)는 교회 회계 시스템에 맞춰 고정.
 변경 시 `offering_config.py`의 `CATEGORIES` 딕셔너리도 함께 수정 필요.
 
-### 3. 이미지 유형별 처리
+### 3. 입력 유형별 처리
 
-**통계표** (1.jpg, 3.jpg, 10.jpg, 11.jpg):
-- 표 형태 → 여러 건의 (이름, 금액) 추출
-- 합계 행으로 교차 검증
+**PDF 모드**: `data/YYYY/MMDD/input/scan.pdf`
+- Read 도구로 전체 페이지 일괄 읽기
+- 내용 기반 페이지 자동 분류
 
-**전표** (2.jpg, 4-9.jpg):
-- 단일 전표 → 총액 + 내역 추출
-- 부서명만 있으면 이름=부서명
+**이미지 모드**: `data/YYYY/MMDD/input/*.jpg`
+- 각 이미지를 개별 Read
+- 내용 기반 유형 자동 분류
 
-**특별헌금** (번호 없는 파일명):
-- 사용자에게 입력 여부 질문
+**페이지 유형 자동 분류 (내용 기반)**:
+- 통계표: 표 형태 → 여러 건의 (이름, 금액) 추출, 합계 교차 검증
+- 전표: 단일 전표 → 총액 + 내역 추출, 부서명만 있으면 이름=부서명
+- 중복: 이전 페이지와 동일 내용 → 건너뛰기
+- 특별헌금: "송구영신", "헌신예배" 등 → 사용자에게 포함 여부 질문
 
 ## CLI 사용법
 
 ```bash
-# 템플릿 생성
-python3 scripts/process_offering.py create 20260125
+# 템플릿 생성 (MMDD 단축 지원)
+python3 scripts/process_offering.py create 0125
 
 # 데이터 입력 (JSON via stdin)
 echo '{"십일조": [{"name": "최정호", "amount": 578000}]}' | \
-  python3 scripts/process_offering.py write 20260125
+  python3 scripts/process_offering.py write 0125
 
 # 검증
-python3 scripts/process_offering.py verify 20260125
+python3 scripts/process_offering.py verify 0125
+
+# YYYYMMDD 형식도 사용 가능
+python3 scripts/process_offering.py create 20260125
 
 # 이름 교정 (JSON via stdin)
 echo '{"names": ["천인성", "정완구"]}' | python3 scripts/correct_names.py
@@ -113,3 +131,9 @@ python3 scripts/correct_names.py --add "새교인이름"
 1. `scripts/offering_config.py`의 `CATEGORIES` 수정
 2. 필요 시 `CATEGORY_ALIASES` 업데이트
 3. 템플릿 xlsx의 행 구조가 변경된 경우 새 템플릿 파일 교체
+
+## 개선 계획
+
+- **Phase 1** ✅: 폴더 구조 정리, PDF 지원, MMDD 단축
+- **Phase 2** ✅: 중복 감지, 특별헌금 플래그, 카테고리 매핑 개선
+- **Phase 3**: Google Drive API (`scripts/gdrive.py` — pull/push)

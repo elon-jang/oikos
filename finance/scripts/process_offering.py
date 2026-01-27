@@ -16,7 +16,7 @@ import openpyxl
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(SCRIPT_DIR)
-TEMPLATE_FILE = os.path.join(BASE_DIR, "2026헌금_업로드샘플.xlsx")
+TEMPLATE_FILE = os.path.join(BASE_DIR, "templates", "upload_sample.xlsx")
 
 # Import config
 sys.path.insert(0, SCRIPT_DIR)
@@ -30,7 +30,11 @@ def _parse_date(date_str: str) -> datetime:
 
 def _output_path(date_str: str) -> str:
     """날짜에 해당하는 Excel 파일 경로."""
-    return os.path.join(BASE_DIR, f"{date_str}.xlsx")
+    year = date_str[:4]
+    mmdd = date_str[4:]
+    data_dir = os.path.join(BASE_DIR, "data", year, mmdd)
+    os.makedirs(data_dir, exist_ok=True)
+    return os.path.join(data_dir, f"{date_str}.xlsx")
 
 
 def create_template(date_str: str) -> str:
@@ -90,6 +94,18 @@ def write_data(date_str: str, data_json: str) -> str:
 
     warnings = []
     total_entries = 0
+
+    # 중복 감지 (동일 카테고리 내 이름+금액 중복)
+    for category, entries in data.items():
+        seen = {}
+        for entry in entries:
+            key = (entry.get("name", ""), entry.get("amount", 0))
+            if key in seen:
+                warnings.append(
+                    f"⚠ 중복 항목 감지 ({category}): {key[0]} {key[1]:,}원"
+                )
+            else:
+                seen[key] = True
 
     for category, entries in data.items():
         if category not in CATEGORIES:
@@ -188,6 +204,8 @@ def main():
 
     command = sys.argv[1]
     date_str = sys.argv[2]
+    if len(date_str) == 4:
+        date_str = f"{datetime.now().year}{date_str}"
 
     if command == "create":
         create_template(date_str)

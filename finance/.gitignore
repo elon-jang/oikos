@@ -9,6 +9,5 @@ __pycache__/
 # macOS
 .DS_Store
 
-# Weekly data files (images and output)
-20??????.xlsx
-20??????/
+# Data (images, PDFs, output xlsx)
+data/
