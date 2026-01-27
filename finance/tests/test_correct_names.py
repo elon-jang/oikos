@@ -106,5 +106,48 @@ class TestAddMember(unittest.TestCase):
             os.unlink(filepath)
 
 
+class TestLoadMembersErrors(unittest.TestCase):
+    def test_missing_file_raises(self):
+        with self.assertRaises(FileNotFoundError):
+            correct_names.load_members("/nonexistent/path/members.txt")
+
+    def test_empty_file(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as f:
+            f.write("")
+            filepath = f.name
+        try:
+            members = correct_names.load_members(filepath)
+            self.assertEqual(members, [])
+        finally:
+            os.unlink(filepath)
+
+    def test_whitespace_only_file(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as f:
+            f.write("  \n\n  \n")
+            filepath = f.name
+        try:
+            members = correct_names.load_members(filepath)
+            self.assertEqual(members, [])
+        finally:
+            os.unlink(filepath)
+
+
+class TestAddMemberErrors(unittest.TestCase):
+    def test_add_to_missing_file_raises(self):
+        with self.assertRaises(FileNotFoundError):
+            correct_names.add_member("홍길동", "/nonexistent/path/members.txt")
+
+
+class TestCorrectNameEdgeCases(unittest.TestCase):
+    def test_empty_members_list(self):
+        result = correct_names.correct_name("홍길동", [])
+        self.assertEqual(result["status"], "unknown")
+
+    def test_single_char_name(self):
+        members = ["김", "이", "박"]
+        result = correct_names.correct_name("김", members)
+        self.assertEqual(result["status"], "exact")
+
+
 if __name__ == "__main__":
     unittest.main()

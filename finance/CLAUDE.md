@@ -145,11 +145,11 @@ Google Drive (gdrive.py push)
 - 403: 권한 없음 → Drive 폴더 접근 권한 확인 안내
 - 404: 리소스 미발견 → 폴더 ID 확인 안내
 - 429: API 할당량 초과 → 재시도 안내
-- 토큰 갱신 실패 시 → 토큰 삭제 후 재인증 유도
+- 토큰 갱신 실패 시 → `RefreshError` 캐치, 토큰 삭제 후 재인증 유도
 
 ### 5. 데이터 백업 정책
 
-**자동 백업**: `process_offering.py`의 `create_template()`과 `write_data()`에서 기존 파일이 있으면 쓰기 전 자동 백업
+**자동 백업**: `_backup_file()` 헬퍼로 기존 파일을 쓰기 전 자동 백업
 
 **동작**:
 - `create_template()`: 기존 Excel → `YYYYMMDD_backup.xlsx` 복사 후 새 템플릿 생성
@@ -158,6 +158,23 @@ Google Drive (gdrive.py push)
 **백업 위치**: `data/YYYY/MMDD/` 동일 폴더 내 (단일 백업, 최신 1개만 유지)
 
 **주의**: 백업 파일은 자동 삭제되지 않으므로 필요시 수동 정리
+
+### 6. 입력 검증
+
+**`write_data()` 검증** (`_validate_data()`):
+- 데이터가 dict인지, 항목이 list인지 구조 검증
+- 각 항목에 `name`(비어있지 않은 문자열)과 `amount`(0 이상 숫자) 필수
+- 검증 실패 시 Excel 쓰기 없이 오류 메시지 반환
+
+**`offering_config.py` 자동 검증** (`_validate_categories()`):
+- 모듈 로드 시 자동 실행
+- `slots` 값과 행 범위(`end - start + 1`) 일치 여부 확인
+- 카테고리 간 행 중복 감지
+- 불일치 시 `ValueError` 발생 → 잘못된 설정으로 프로그램 실행 방지
+
+**`correct_names.py` 방어 처리**:
+- `load_members()`: 명부 파일 없으면 `FileNotFoundError` 명시적 발생
+- `correct_name()`: 빈 members 리스트에서 `IndexError` 방지
 
 ## CLI 사용법
 
@@ -196,13 +213,13 @@ python3 scripts/gdrive.py push 0125         # 출력 Excel 업로드
 ## 테스트
 
 ```bash
-python3 -m pytest tests/ -v              # 전체 테스트 (40개)
+python3 -m pytest tests/ -v              # 전체 테스트 (62개)
 python3 -m pytest tests/test_gdrive.py   # gdrive 모듈만
 ```
 
 **테스트 구조** (`tests/`):
-- `test_process_offering.py`: 템플릿 생성, 데이터 입력, 백업 검증, verify
-- `test_correct_names.py`: 자모 분해, 유사도 계산, 이름 교정, 명부 추가
+- `test_process_offering.py`: 카테고리 설정 검증, 템플릿 생성, 데이터 입력, 입력 검증 에러 경로, 백업, verify
+- `test_correct_names.py`: 자모 분해, 유사도 계산, 이름 교정, 명부 추가, 파일 I/O 에러, 엣지 케이스
 - `test_gdrive.py`: 날짜 파싱, 폴더 검색/생성, 파일 목록, 에러 핸들링 (Google API mock)
 
 ## 개선 계획
@@ -211,3 +228,4 @@ python3 -m pytest tests/test_gdrive.py   # gdrive 모듈만
 - **Phase 2** ✅: 중복 감지, 특별헌금 플래그, 카테고리 매핑 개선
 - **Phase 3** ✅: Google Drive API 연동 (`scripts/gdrive.py` — pull/push/list)
 - **Phase 4** ✅: Drive 폴더 자동 생성, Excel write 백업, API 에러 핸들링, 테스트 스위트
+- **Phase 5** ✅: 입력 검증, 설정 일관성 검증, 파일 I/O 방어, 에러 경로 테스트 (62개)

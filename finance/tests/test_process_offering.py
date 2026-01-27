@@ -11,7 +11,30 @@ import unittest
 SCRIPT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts")
 sys.path.insert(0, SCRIPT_DIR)
 
+import offering_config
 import process_offering
+
+
+class TestCategoryValidation(unittest.TestCase):
+    def test_slots_match_row_range(self):
+        """모든 카테고리의 slots가 행 범위(end - start + 1)와 일치해야 함."""
+        for cat_name, config in offering_config.CATEGORIES.items():
+            expected = config["end"] - config["start"] + 1
+            self.assertEqual(
+                config["slots"], expected,
+                f"{cat_name}: slots={config['slots']} != range {config['start']}-{config['end']} ({expected})"
+            )
+
+    def test_no_overlapping_rows(self):
+        """카테고리 간 행이 겹치지 않아야 함."""
+        seen = {}
+        for cat_name, config in offering_config.CATEGORIES.items():
+            for row in range(config["start"], config["end"] + 1):
+                self.assertNotIn(
+                    row, seen,
+                    f"행 {row}: {cat_name}과 {seen.get(row)} 중복"
+                )
+                seen[row] = cat_name
 
 
 class TestParseDate(unittest.TestCase):
@@ -156,6 +179,107 @@ class TestVerify(unittest.TestCase):
         self.assertEqual(parsed["십일조"]["count"], 2)
         self.assertEqual(parsed["십일조"]["total"], 300000)
         self.assertEqual(parsed["_summary"]["grand_total"], 300000)
+
+
+class TestValidateData(unittest.TestCase):
+    def test_valid_data(self):
+        data = {"십일조": [{"name": "홍길동", "amount": 100000}]}
+        errors = process_offering._validate_data(data)
+        self.assertEqual(errors, [])
+
+    def test_not_dict(self):
+        errors = process_offering._validate_data([1, 2, 3])
+        self.assertEqual(len(errors), 1)
+        self.assertIn("dict", errors[0])
+
+    def test_entries_not_list(self):
+        errors = process_offering._validate_data({"십일조": "잘못된형식"})
+        self.assertEqual(len(errors), 1)
+        self.assertIn("list", errors[0])
+
+    def test_entry_not_dict(self):
+        errors = process_offering._validate_data({"십일조": ["문자열"]})
+        self.assertEqual(len(errors), 1)
+        self.assertIn("dict", errors[0])
+
+    def test_missing_name(self):
+        errors = process_offering._validate_data({"십일조": [{"amount": 100}]})
+        self.assertEqual(len(errors), 1)
+        self.assertIn("이름", errors[0])
+
+    def test_empty_name(self):
+        errors = process_offering._validate_data({"십일조": [{"name": "  ", "amount": 100}]})
+        self.assertEqual(len(errors), 1)
+        self.assertIn("이름", errors[0])
+
+    def test_missing_amount(self):
+        errors = process_offering._validate_data({"십일조": [{"name": "홍길동"}]})
+        self.assertEqual(len(errors), 1)
+        self.assertIn("amount", errors[0])
+
+    def test_negative_amount(self):
+        errors = process_offering._validate_data({"십일조": [{"name": "홍길동", "amount": -100}]})
+        self.assertEqual(len(errors), 1)
+        self.assertIn("0 이상", errors[0])
+
+    def test_string_amount(self):
+        errors = process_offering._validate_data({"십일조": [{"name": "홍길동", "amount": "백만원"}]})
+        self.assertEqual(len(errors), 1)
+
+    def test_multiple_errors(self):
+        data = {
+            "십일조": [
+                {"name": "", "amount": -1},
+                {"name": "홍길동"},
+            ]
+        }
+        errors = process_offering._validate_data(data)
+        self.assertGreaterEqual(len(errors), 3)
+
+
+class TestWriteDataValidation(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self._orig_base = process_offering.BASE_DIR
+        process_offering.BASE_DIR = self.tmpdir
+        templates_dir = os.path.join(self.tmpdir, "templates")
+        os.makedirs(templates_dir, exist_ok=True)
+        shutil.copy2(process_offering.TEMPLATE_FILE, os.path.join(templates_dir, "upload_sample.xlsx"))
+        process_offering.TEMPLATE_FILE = os.path.join(templates_dir, "upload_sample.xlsx")
+
+    def tearDown(self):
+        process_offering.BASE_DIR = self._orig_base
+        process_offering.TEMPLATE_FILE = os.path.join(self._orig_base, "templates", "upload_sample.xlsx")
+        shutil.rmtree(self.tmpdir)
+
+    def test_invalid_json_raises(self):
+        with self.assertRaises(json.JSONDecodeError):
+            process_offering.write_data("20260125", "{잘못된 json")
+
+    def test_validation_rejects_bad_data(self):
+        data = {"십일조": [{"name": "홍길동"}]}  # amount 없음
+        result = process_offering.write_data("20260125", json.dumps(data))
+        self.assertIn("검증 실패", result)
+
+    def test_validation_rejects_negative_amount(self):
+        data = {"십일조": [{"name": "홍길동", "amount": -500}]}
+        result = process_offering.write_data("20260125", json.dumps(data))
+        self.assertIn("검증 실패", result)
+
+
+class TestBackupFile(unittest.TestCase):
+    def test_backup_creates_copy(self):
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            f.write(b"test content")
+            filepath = f.name
+        try:
+            backup_path = process_offering._backup_file(filepath)
+            self.assertTrue(os.path.exists(backup_path))
+            self.assertTrue(backup_path.endswith("_backup.xlsx"))
+        finally:
+            os.unlink(filepath)
+            if os.path.exists(backup_path):
+                os.unlink(backup_path)
 
 
 if __name__ == "__main__":

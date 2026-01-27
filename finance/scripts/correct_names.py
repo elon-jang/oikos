@@ -49,7 +49,13 @@ def jamo_similarity(a: str, b: str) -> float:
 
 
 def load_members(filepath: str = MEMBERS_FILE) -> list[str]:
-    """교인 명부 파일에서 이름 목록 로드."""
+    """교인 명부 파일에서 이름 목록 로드.
+
+    Raises:
+        FileNotFoundError: 명부 파일이 존재하지 않을 때
+    """
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"교인 명부 파일 없음: {filepath}")
     with open(filepath, encoding="utf-8") as f:
         return [line.strip() for line in f if line.strip()]
 
@@ -73,6 +79,10 @@ def correct_name(name: str, members: list[str], cutoff: float = 0.5) -> dict:
     # 정확히 일치
     if name in members:
         return {"original": name, "corrected": name, "status": "exact", "confidence": 1.0}
+
+    # 명부가 비어있으면 매칭 불가
+    if not members:
+        return {"original": name, "corrected": name, "status": "unknown", "confidence": 0.0}
 
     # 자모 분해 기반 fuzzy matching — 전체 멤버에 대해 유사도 계산
     scores = [(m, jamo_similarity(name, m)) for m in members]
@@ -99,7 +109,12 @@ def correct_names_batch(names: list[str], members: list[str] | None = None, cuto
 
 
 def add_member(name: str, filepath: str = MEMBERS_FILE) -> bool:
-    """신규 교인을 명부에 추가."""
+    """신규 교인을 명부에 추가.
+
+    Raises:
+        FileNotFoundError: 명부 파일이 존재하지 않을 때
+        OSError: 파일 쓰기 실패 시
+    """
     members = load_members(filepath)
     if name in members:
         return False

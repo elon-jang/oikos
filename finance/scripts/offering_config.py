@@ -69,6 +69,29 @@ CATEGORY_ALIASES = {
 CATEGORY_ORDER = list(CATEGORIES.keys())
 
 
+def _validate_categories():
+    """CATEGORIES 설정 일관성 검증 (모듈 로드 시 자동 실행)."""
+    seen_rows = set()
+    for cat_name, config in CATEGORIES.items():
+        start, end = config["start"], config["end"]
+        expected_slots = end - start + 1
+        actual_slots = config.get("slots")
+        if actual_slots != expected_slots:
+            raise ValueError(
+                f"CATEGORIES 설정 오류 — {cat_name}: slots={actual_slots}이지만 "
+                f"행 범위 {start}-{end}은 {expected_slots}개입니다"
+            )
+        for row in range(start, end + 1):
+            if row in seen_rows:
+                raise ValueError(
+                    f"CATEGORIES 설정 오류 — 행 {row}이 여러 카테고리에서 사용됩니다 ({cat_name})"
+                )
+            seen_rows.add(row)
+
+
+_validate_categories()
+
+
 def resolve_category(raw_name: str) -> str | None:
     """OCR에서 추출한 카테고리명을 정규화된 카테고리명으로 변환.
 

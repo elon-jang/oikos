@@ -28,6 +28,14 @@ def _parse_date(date_str: str) -> datetime:
     return datetime.strptime(date_str, "%Y%m%d")
 
 
+def _backup_file(filepath: str) -> str:
+    """기존 파일을 _backup.xlsx로 백업. 백업 경로 반환."""
+    backup_path = filepath.replace(".xlsx", "_backup.xlsx")
+    shutil.copy2(filepath, backup_path)
+    print(f"기존 파일 백업: {backup_path}")
+    return backup_path
+
+
 def _output_path(date_str: str) -> str:
     """날짜에 해당하는 Excel 파일 경로."""
     year = date_str[:4]
@@ -48,9 +56,7 @@ def create_template(date_str: str) -> str:
 
     # 이미 파일이 있으면 백업
     if os.path.exists(output_path):
-        backup_path = output_path.replace(".xlsx", "_backup.xlsx")
-        shutil.copy2(output_path, backup_path)
-        print(f"기존 파일 백업: {backup_path}")
+        _backup_file(output_path)
 
     # 템플릿 복사
     shutil.copy2(TEMPLATE_FILE, output_path)
@@ -59,13 +65,37 @@ def create_template(date_str: str) -> str:
     wb = openpyxl.load_workbook(output_path)
     ws = wb.active
 
-    for row_num in range(4, 96):  # rows 4-95
+    first_row = min(c["start"] for c in CATEGORIES.values())
+    last_row = max(c["end"] for c in CATEGORIES.values())
+    for row_num in range(first_row, last_row + 1):
         cell_a = ws.cell(row=row_num, column=1)  # Column A: 일자
         cell_a.value = target_date
 
     wb.save(output_path)
     print(f"템플릿 생성 완료: {output_path}")
     return output_path
+
+
+def _validate_data(data: dict) -> list[str]:
+    """데이터 구조 검증. 오류 메시지 목록 반환."""
+    errors = []
+    if not isinstance(data, dict):
+        return [f"데이터가 dict 형식이어야 합니다 (현재: {type(data).__name__})"]
+    for category, entries in data.items():
+        if not isinstance(entries, list):
+            errors.append(f"{category}: 항목이 list여야 합니다 (현재: {type(entries).__name__})")
+            continue
+        for i, entry in enumerate(entries):
+            if not isinstance(entry, dict):
+                errors.append(f"{category}[{i}]: 항목이 dict여야 합니다")
+                continue
+            if "name" not in entry or not str(entry["name"]).strip():
+                errors.append(f"{category}[{i}]: 이름이 비어있습니다")
+            if "amount" not in entry:
+                errors.append(f"{category}[{i}]: 금액(amount)이 없습니다")
+            elif not isinstance(entry["amount"], (int, float)) or entry["amount"] < 0:
+                errors.append(f"{category}[{i}]: 금액은 0 이상의 숫자여야 합니다 (현재: {entry['amount']})")
+    return errors
 
 
 def write_data(date_str: str, data_json: str) -> str:
@@ -86,13 +116,18 @@ def write_data(date_str: str, data_json: str) -> str:
     output_path = _output_path(date_str)
     data = json.loads(data_json) if isinstance(data_json, str) else data_json
 
+    # 입력 데이터 검증
+    validation_errors = _validate_data(data)
+    if validation_errors:
+        msg = "❌ 데이터 검증 실패:\n" + "\n".join(validation_errors)
+        print(msg)
+        return msg
+
     if not os.path.exists(output_path):
         create_template(date_str)
     else:
         # 기존 파일 백업
-        backup_path = output_path.replace(".xlsx", "_backup.xlsx")
-        shutil.copy2(output_path, backup_path)
-        print(f"기존 파일 백업: {backup_path}")
+        _backup_file(output_path)
 
     wb = openpyxl.load_workbook(output_path)
     ws = wb.active

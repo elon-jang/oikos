@@ -11,6 +11,7 @@ import os
 import sys
 from datetime import datetime
 
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -42,8 +43,9 @@ def _get_service():
         if creds and creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
-            except Exception:
-                print("토큰 갱신 실패 → 재인증 필요")
+            except RefreshError as e:
+                reason = e.args[0] if e.args else "알 수 없는 원인"
+                print(f"토큰 갱신 실패 ({reason}) → 재인증 필요")
                 os.remove(GDRIVE_TOKEN_PATH)
                 creds = None
         if not creds or not creds.valid:
