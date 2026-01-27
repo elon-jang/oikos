@@ -11,3 +11,6 @@ __pycache__/
 
 # Data (images, PDFs, output xlsx)
 data/
+
+# 개인정보 (교인 명부)
+scripts/members.txt

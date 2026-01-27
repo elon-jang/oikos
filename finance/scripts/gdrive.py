@@ -277,10 +277,62 @@ def cmd_push(date_str: str):
         _handle_http_error(e, "파일 업로드")
 
 
+MEMBERS_FILE = os.path.join(SCRIPT_DIR, "members.txt")
+MEMBERS_DRIVE_NAME = "members.txt"
+
+
+def cmd_members_push():
+    """교인 명부를 Drive 루트 폴더에 업로드."""
+    if not os.path.exists(MEMBERS_FILE):
+        print(f"파일 없음: {MEMBERS_FILE}")
+        sys.exit(1)
+
+    service = _get_service()
+    media = MediaFileUpload(MEMBERS_FILE, mimetype="text/plain")
+
+    existing = _list_files(service, GDRIVE_FOLDER_ID, f"name = '{MEMBERS_DRIVE_NAME}'")
+
+    try:
+        if existing:
+            file_id = existing[0]["id"]
+            service.files().update(fileId=file_id, media_body=media).execute()
+            print(f"명부 업데이트 완료: {MEMBERS_DRIVE_NAME} (기존 파일 덮어쓰기)")
+        else:
+            file_metadata = {"name": MEMBERS_DRIVE_NAME, "parents": [GDRIVE_FOLDER_ID]}
+            service.files().create(
+                body=file_metadata, media_body=media, fields="id"
+            ).execute()
+            print(f"명부 업로드 완료: {MEMBERS_DRIVE_NAME} → Drive")
+    except HttpError as e:
+        _handle_http_error(e, "명부 업로드")
+
+
+def cmd_members_pull():
+    """Drive에서 교인 명부 다운로드."""
+    service = _get_service()
+    existing = _list_files(service, GDRIVE_FOLDER_ID, f"name = '{MEMBERS_DRIVE_NAME}'")
+
+    if not existing:
+        print(f"Drive에 명부 파일 없음: {MEMBERS_DRIVE_NAME}")
+        sys.exit(1)
+
+    file_id = existing[0]["id"]
+    try:
+        request = service.files().get_media(fileId=file_id)
+        with open(MEMBERS_FILE, "wb") as fh:
+            downloader = MediaIoBaseDownload(fh, request)
+            done = False
+            while not done:
+                _, done = downloader.next_chunk()
+        print(f"명부 다운로드 완료: {MEMBERS_DRIVE_NAME} → {MEMBERS_FILE}")
+    except HttpError as e:
+        _handle_http_error(e, "명부 다운로드")
+
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: python3 scripts/gdrive.py <command> [date]")
-        print("Commands: list, pull <MMDD>, push <MMDD>")
+        print("Commands: list, pull <MMDD>, push <MMDD>, members-push, members-pull")
         sys.exit(1)
 
     command = sys.argv[1]
@@ -296,6 +348,10 @@ def main():
             cmd_pull(date_str)
         else:
             cmd_push(date_str)
+    elif command == "members-push":
+        cmd_members_push()
+    elif command == "members-pull":
+        cmd_members_pull()
     else:
         print(f"Unknown command: {command}")
         sys.exit(1)
