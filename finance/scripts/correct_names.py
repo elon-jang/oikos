@@ -137,6 +137,15 @@ def main():
         name = sys.argv[2]
         added = add_member(name)
         print(json.dumps({"added": added, "name": name}, ensure_ascii=False))
+        if added:
+            try:
+                import subprocess
+                subprocess.run(
+                    [sys.executable, os.path.join(SCRIPT_DIR, "gdrive.py"), "members-push"],
+                    check=True,
+                )
+            except Exception as e:
+                print(f"⚠ Drive 동기화 실패: {e} (로컬 명부는 업데이트됨)")
         return
 
     input_data = json.loads(sys.stdin.read())
