@@ -157,7 +157,7 @@ Google Drive (gdrive.py push)
 
 **백업 위치**: `data/YYYY/MMDD/` 동일 폴더 내 (단일 백업, 최신 1개만 유지)
 
-**주의**: 백업 파일은 자동 삭제되지 않으므로 필요시 수동 정리
+**복원**: `rollback` 명령으로 백업에서 복원 가능 (백업 → 현재 파일 복사 후 백업 삭제)
 
 ### 6. 입력 검증
 
@@ -186,8 +186,18 @@ python3 scripts/process_offering.py create 0125
 echo '{"십일조": [{"name": "최정호", "amount": 578000}]}' | \
   python3 scripts/process_offering.py write 0125
 
+# dry-run (검증 + 미리보기만, 파일 쓰기 안함)
+echo '{"십일조": [{"name": "최정호", "amount": 578000}]}' | \
+  python3 scripts/process_offering.py write --dry-run 0125
+
 # 검증
 python3 scripts/process_offering.py verify 0125
+
+# 롤백 (백업에서 복원)
+python3 scripts/process_offering.py rollback 0125
+
+# 월간 요약
+python3 scripts/process_offering.py summary 202601   # 또는 01
 
 # YYYYMMDD 형식도 사용 가능
 python3 scripts/process_offering.py create 20260125
@@ -213,12 +223,12 @@ python3 scripts/gdrive.py push 0125         # 출력 Excel 업로드
 ## 테스트
 
 ```bash
-python3 -m pytest tests/ -v              # 전체 테스트 (62개)
+python3 -m pytest tests/ -v              # 전체 테스트 (73개)
 python3 -m pytest tests/test_gdrive.py   # gdrive 모듈만
 ```
 
 **테스트 구조** (`tests/`):
-- `test_process_offering.py`: 카테고리 설정 검증, 템플릿 생성, 데이터 입력, 입력 검증 에러 경로, 백업, verify
+- `test_process_offering.py`: 카테고리 설정 검증, 템플릿 생성, 데이터 입력, 입력 검증 에러 경로, 백업, verify, dry-run, summary, rollback
 - `test_correct_names.py`: 자모 분해, 유사도 계산, 이름 교정, 명부 추가, 파일 I/O 에러, 엣지 케이스
 - `test_gdrive.py`: 날짜 파싱, 폴더 검색/생성, 파일 목록, 에러 핸들링 (Google API mock)
 
@@ -228,4 +238,5 @@ python3 -m pytest tests/test_gdrive.py   # gdrive 모듈만
 - **Phase 2** ✅: 중복 감지, 특별헌금 플래그, 카테고리 매핑 개선
 - **Phase 3** ✅: Google Drive API 연동 (`scripts/gdrive.py` — pull/push/list)
 - **Phase 4** ✅: Drive 폴더 자동 생성, Excel write 백업, API 에러 핸들링, 테스트 스위트
-- **Phase 5** ✅: 입력 검증, 설정 일관성 검증, 파일 I/O 방어, 에러 경로 테스트 (62개)
+- **Phase 5** ✅: 입력 검증, 설정 일관성 검증, 파일 I/O 방어, 에러 경로 테스트
+- **Phase 6** ✅: 테스트 setUp 리팩터링, dry-run, 월간 요약, rollback (73개 테스트)

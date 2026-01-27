@@ -65,21 +65,26 @@ class TestOutputPath(unittest.TestCase):
                 process_offering.BASE_DIR = orig_base
 
 
-class TestCreateTemplate(unittest.TestCase):
+class _TemplateTestBase(unittest.TestCase):
+    """tmpdir에 템플릿을 복사하고 BASE_DIR을 교체하는 공통 setUp/tearDown."""
+
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self._orig_base = process_offering.BASE_DIR
+        self._orig_template = process_offering.TEMPLATE_FILE
         process_offering.BASE_DIR = self.tmpdir
-        # 템플릿 파일 복사
         templates_dir = os.path.join(self.tmpdir, "templates")
         os.makedirs(templates_dir, exist_ok=True)
-        shutil.copy2(process_offering.TEMPLATE_FILE, os.path.join(templates_dir, "upload_sample.xlsx"))
+        shutil.copy2(self._orig_template, os.path.join(templates_dir, "upload_sample.xlsx"))
         process_offering.TEMPLATE_FILE = os.path.join(templates_dir, "upload_sample.xlsx")
 
     def tearDown(self):
         process_offering.BASE_DIR = self._orig_base
-        process_offering.TEMPLATE_FILE = os.path.join(self._orig_base, "templates", "upload_sample.xlsx")
+        process_offering.TEMPLATE_FILE = self._orig_template
         shutil.rmtree(self.tmpdir)
+
+
+class TestCreateTemplate(_TemplateTestBase):
 
     def test_creates_file(self):
         path = process_offering.create_template("20260125")
@@ -95,20 +100,7 @@ class TestCreateTemplate(unittest.TestCase):
         self.assertTrue(os.path.exists(backup))
 
 
-class TestWriteData(unittest.TestCase):
-    def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
-        self._orig_base = process_offering.BASE_DIR
-        process_offering.BASE_DIR = self.tmpdir
-        templates_dir = os.path.join(self.tmpdir, "templates")
-        os.makedirs(templates_dir, exist_ok=True)
-        shutil.copy2(process_offering.TEMPLATE_FILE, os.path.join(templates_dir, "upload_sample.xlsx"))
-        process_offering.TEMPLATE_FILE = os.path.join(templates_dir, "upload_sample.xlsx")
-
-    def tearDown(self):
-        process_offering.BASE_DIR = self._orig_base
-        process_offering.TEMPLATE_FILE = os.path.join(self._orig_base, "templates", "upload_sample.xlsx")
-        shutil.rmtree(self.tmpdir)
+class TestWriteData(_TemplateTestBase):
 
     def test_write_creates_template_if_missing(self):
         data = {"십일조": [{"name": "테스트", "amount": 100}]}
@@ -146,20 +138,7 @@ class TestWriteData(unittest.TestCase):
         self.assertTrue(os.path.exists(backup_path))
 
 
-class TestVerify(unittest.TestCase):
-    def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
-        self._orig_base = process_offering.BASE_DIR
-        process_offering.BASE_DIR = self.tmpdir
-        templates_dir = os.path.join(self.tmpdir, "templates")
-        os.makedirs(templates_dir, exist_ok=True)
-        shutil.copy2(process_offering.TEMPLATE_FILE, os.path.join(templates_dir, "upload_sample.xlsx"))
-        process_offering.TEMPLATE_FILE = os.path.join(templates_dir, "upload_sample.xlsx")
-
-    def tearDown(self):
-        process_offering.BASE_DIR = self._orig_base
-        process_offering.TEMPLATE_FILE = os.path.join(self._orig_base, "templates", "upload_sample.xlsx")
-        shutil.rmtree(self.tmpdir)
+class TestVerify(_TemplateTestBase):
 
     def test_verify_missing_file(self):
         result = process_offering.verify("20260201")
@@ -237,20 +216,7 @@ class TestValidateData(unittest.TestCase):
         self.assertGreaterEqual(len(errors), 3)
 
 
-class TestWriteDataValidation(unittest.TestCase):
-    def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
-        self._orig_base = process_offering.BASE_DIR
-        process_offering.BASE_DIR = self.tmpdir
-        templates_dir = os.path.join(self.tmpdir, "templates")
-        os.makedirs(templates_dir, exist_ok=True)
-        shutil.copy2(process_offering.TEMPLATE_FILE, os.path.join(templates_dir, "upload_sample.xlsx"))
-        process_offering.TEMPLATE_FILE = os.path.join(templates_dir, "upload_sample.xlsx")
-
-    def tearDown(self):
-        process_offering.BASE_DIR = self._orig_base
-        process_offering.TEMPLATE_FILE = os.path.join(self._orig_base, "templates", "upload_sample.xlsx")
-        shutil.rmtree(self.tmpdir)
+class TestWriteDataValidation(_TemplateTestBase):
 
     def test_invalid_json_raises(self):
         with self.assertRaises(json.JSONDecodeError):
@@ -265,6 +231,123 @@ class TestWriteDataValidation(unittest.TestCase):
         data = {"십일조": [{"name": "홍길동", "amount": -500}]}
         result = process_offering.write_data("20260125", json.dumps(data))
         self.assertIn("검증 실패", result)
+
+
+class TestDryRun(_TemplateTestBase):
+
+    def test_dry_run_no_file_created(self):
+        data = {"십일조": [{"name": "홍길동", "amount": 100000}]}
+        result = process_offering.write_data("20260125", json.dumps(data), dry_run=True)
+        self.assertIn("[dry-run]", result)
+        output_path = process_offering._output_path("20260125")
+        self.assertFalse(os.path.exists(output_path))
+
+    def test_dry_run_shows_summary(self):
+        data = {
+            "십일조": [
+                {"name": "홍길동", "amount": 100000},
+                {"name": "김철수", "amount": 200000},
+            ],
+            "감사": [{"name": "박영희", "amount": 50000}],
+        }
+        result = process_offering.write_data("20260125", json.dumps(data), dry_run=True)
+        self.assertIn("3건", result)
+        self.assertIn("350,000", result)
+        self.assertIn("십일조", result)
+        self.assertIn("감사", result)
+
+    def test_dry_run_validation_still_rejects(self):
+        data = {"십일조": [{"name": "홍길동"}]}
+        result = process_offering.write_data("20260125", json.dumps(data), dry_run=True)
+        self.assertIn("검증 실패", result)
+
+    def test_dry_run_warnings_shown(self):
+        data = {"없는카테고리": [{"name": "테스트", "amount": 100}]}
+        result = process_offering.write_data("20260125", json.dumps(data), dry_run=True)
+        self.assertIn("알 수 없는 카테고리", result)
+
+
+class TestSummary(_TemplateTestBase):
+
+    def test_summary_no_data(self):
+        result = process_offering.summary("202601")
+        parsed = json.loads(result)
+        self.assertIn("error", parsed)
+
+    def test_summary_single_week(self):
+        data = {
+            "십일조": [{"name": "홍길동", "amount": 100000}],
+            "감사": [{"name": "김철수", "amount": 50000}],
+        }
+        process_offering.write_data("20260125", json.dumps(data))
+        result = process_offering.summary("202601")
+        parsed = json.loads(result)
+        self.assertEqual(parsed["month"], "2026-01")
+        self.assertEqual(parsed["weeks"], 1)
+        self.assertEqual(parsed["grand_total"], 150000)
+        self.assertEqual(parsed["categories"]["십일조"]["total"], 100000)
+        self.assertEqual(parsed["categories"]["감사"]["total"], 50000)
+
+    def test_summary_multiple_weeks(self):
+        data1 = {"십일조": [{"name": "홍길동", "amount": 100000}]}
+        data2 = {"십일조": [{"name": "김철수", "amount": 200000}]}
+        process_offering.write_data("20260118", json.dumps(data1))
+        process_offering.write_data("20260125", json.dumps(data2))
+        result = process_offering.summary("202601")
+        parsed = json.loads(result)
+        self.assertEqual(parsed["weeks"], 2)
+        self.assertEqual(parsed["categories"]["십일조"]["count"], 2)
+        self.assertEqual(parsed["categories"]["십일조"]["total"], 300000)
+        self.assertEqual(parsed["grand_total"], 300000)
+        self.assertEqual(len(parsed["weekly_totals"]), 2)
+
+    def test_summary_wrong_month(self):
+        data = {"십일조": [{"name": "홍길동", "amount": 100000}]}
+        process_offering.write_data("20260125", json.dumps(data))
+        result = process_offering.summary("202602")
+        parsed = json.loads(result)
+        self.assertIn("error", parsed)
+
+
+class TestRollback(_TemplateTestBase):
+
+    def test_rollback_restores_backup(self):
+        data1 = {"십일조": [{"name": "홍길동", "amount": 100000}]}
+        process_offering.write_data("20260125", json.dumps(data1))
+        # 두 번째 write → 첫 번째가 backup으로 이동
+        data2 = {"십일조": [{"name": "김철수", "amount": 999999}]}
+        process_offering.write_data("20260125", json.dumps(data2))
+
+        output_path = process_offering._output_path("20260125")
+        backup_path = output_path.replace(".xlsx", "_backup.xlsx")
+        self.assertTrue(os.path.exists(backup_path))
+
+        # rollback → backup이 현재 파일로 복원
+        result = process_offering.rollback("20260125")
+        self.assertIn("복원 완료", result)
+        self.assertFalse(os.path.exists(backup_path))
+
+        # verify로 복원된 데이터 확인 (data1의 홍길동 100000)
+        verify_result = json.loads(process_offering.verify("20260125"))
+        self.assertEqual(verify_result["십일조"]["entries"][0]["name"], "홍길동")
+        self.assertEqual(verify_result["십일조"]["entries"][0]["amount"], 100000)
+
+    def test_rollback_no_backup(self):
+        process_offering.create_template("20260125")
+        result = process_offering.rollback("20260125")
+        self.assertIn("백업 파일 없음", result)
+
+    def test_rollback_removes_backup_after_restore(self):
+        data = {"십일조": [{"name": "테스트", "amount": 100}]}
+        process_offering.write_data("20260125", json.dumps(data))
+        process_offering.write_data("20260125", json.dumps(data))
+        output_path = process_offering._output_path("20260125")
+        backup_path = output_path.replace(".xlsx", "_backup.xlsx")
+        self.assertTrue(os.path.exists(backup_path))
+
+        process_offering.rollback("20260125")
+        self.assertFalse(os.path.exists(backup_path))
+        self.assertTrue(os.path.exists(output_path))
 
 
 class TestBackupFile(unittest.TestCase):
