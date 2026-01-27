@@ -35,6 +35,10 @@ finance/
 │   ├── gdrive_config.py          # Google Drive API 설정 (폴더 ID, 인증 경로)
 │   ├── gdrive.py                 # Google Drive 연동 (pull/push/list)
 │   └── members.txt               # 교인 명부 (1줄 1명)
+├── tests/
+│   ├── test_process_offering.py  # Excel 처리 테스트
+│   ├── test_correct_names.py     # 이름 교정 테스트
+│   └── test_gdrive.py            # Drive 연동 테스트 (mock)
 ├── CLAUDE.md
 ├── README.md
 └── .gitignore
@@ -131,8 +135,29 @@ Google Drive (gdrive.py push)
 
 **push 동작**:
 1. `data/YYYY/MMDD/YYYYMMDD.xlsx` 존재 확인
-2. MMDD 하위 폴더 있으면 그곳에, 없으면 루트에 업로드
+2. MMDD 하위 폴더 확인
+   - 있으면: 그곳에 업로드
+   - 없으면: 자동 생성 후 업로드 (`_create_subfolder()`)
 3. 동일 파일명 존재 시 덮어쓰기 (update), 없으면 신규 생성 (create)
+
+**에러 처리**:
+- 모든 API 호출에 `try-except HttpError` 적용 (`_handle_http_error()`)
+- 403: 권한 없음 → Drive 폴더 접근 권한 확인 안내
+- 404: 리소스 미발견 → 폴더 ID 확인 안내
+- 429: API 할당량 초과 → 재시도 안내
+- 토큰 갱신 실패 시 → 토큰 삭제 후 재인증 유도
+
+### 5. 데이터 백업 정책
+
+**자동 백업**: `process_offering.py`의 `create_template()`과 `write_data()`에서 기존 파일이 있으면 쓰기 전 자동 백업
+
+**동작**:
+- `create_template()`: 기존 Excel → `YYYYMMDD_backup.xlsx` 복사 후 새 템플릿 생성
+- `write_data()`: 기존 Excel → `YYYYMMDD_backup.xlsx` 복사 후 데이터 입력
+
+**백업 위치**: `data/YYYY/MMDD/` 동일 폴더 내 (단일 백업, 최신 1개만 유지)
+
+**주의**: 백업 파일은 자동 삭제되지 않으므로 필요시 수동 정리
 
 ## CLI 사용법
 
@@ -168,8 +193,21 @@ python3 scripts/gdrive.py push 0125         # 출력 Excel 업로드
 2. 필요 시 `CATEGORY_ALIASES` 업데이트
 3. 템플릿 xlsx의 행 구조가 변경된 경우 새 템플릿 파일 교체
 
+## 테스트
+
+```bash
+python3 -m pytest tests/ -v              # 전체 테스트 (40개)
+python3 -m pytest tests/test_gdrive.py   # gdrive 모듈만
+```
+
+**테스트 구조** (`tests/`):
+- `test_process_offering.py`: 템플릿 생성, 데이터 입력, 백업 검증, verify
+- `test_correct_names.py`: 자모 분해, 유사도 계산, 이름 교정, 명부 추가
+- `test_gdrive.py`: 날짜 파싱, 폴더 검색/생성, 파일 목록, 에러 핸들링 (Google API mock)
+
 ## 개선 계획
 
 - **Phase 1** ✅: 폴더 구조 정리, PDF 지원, MMDD 단축
 - **Phase 2** ✅: 중복 감지, 특별헌금 플래그, 카테고리 매핑 개선
 - **Phase 3** ✅: Google Drive API 연동 (`scripts/gdrive.py` — pull/push/list)
+- **Phase 4** ✅: Drive 폴더 자동 생성, Excel write 백업, API 에러 핸들링, 테스트 스위트
