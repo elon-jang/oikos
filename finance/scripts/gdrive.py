@@ -15,6 +15,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -39,8 +40,13 @@ def _get_service():
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except Exception:
+                print("토큰 갱신 실패 → 재인증 필요")
+                os.remove(GDRIVE_TOKEN_PATH)
+                creds = None
+        if not creds or not creds.valid:
             if not os.path.exists(GDRIVE_CREDENTIALS_PATH):
                 print(f"인증 파일 없음: {GDRIVE_CREDENTIALS_PATH}")
                 sys.exit(1)
@@ -56,6 +62,21 @@ def _get_service():
             f.write(creds.to_json())
 
     return build("drive", "v3", credentials=creds)
+
+
+def _handle_http_error(e: HttpError, context: str = ""):
+    """HttpError를 사용자 친화적 메시지로 변환."""
+    status = e.resp.status
+    messages = {
+        403: "권한 없음 — Drive 폴더 접근 권한을 확인하세요",
+        404: "리소스를 찾을 수 없음 — 폴더 ID를 확인하세요",
+        429: "API 할당량 초과 — 잠시 후 다시 시도하세요",
+    }
+    msg = messages.get(status, f"Drive API 오류 (HTTP {status})")
+    if context:
+        msg = f"{context}: {msg}"
+    print(msg)
+    sys.exit(1)
 
 
 def _parse_date(date_str: str) -> tuple[str, str, str]:
@@ -80,9 +101,26 @@ def _find_subfolder(service, parent_id: str, name: str) -> str | None:
         f" and mimeType = 'application/vnd.google-apps.folder'"
         f" and trashed = false"
     )
-    results = service.files().list(q=query, fields="files(id, name)").execute()
+    try:
+        results = service.files().list(q=query, fields="files(id, name)").execute()
+    except HttpError as e:
+        _handle_http_error(e, "폴더 검색")
     files = results.get("files", [])
     return files[0]["id"] if files else None
+
+
+def _create_subfolder(service, parent_id: str, name: str) -> str:
+    """parent_id 내에 이름이 name인 폴더 생성 → 생성된 폴더 ID 반환."""
+    file_metadata = {
+        "name": name,
+        "mimeType": "application/vnd.google-apps.folder",
+        "parents": [parent_id],
+    }
+    try:
+        folder = service.files().create(body=file_metadata, fields="id").execute()
+    except HttpError as e:
+        _handle_http_error(e, "폴더 생성")
+    return folder["id"]
 
 
 def _list_files(service, folder_id: str, query_extra: str = "") -> list[dict]:
@@ -91,15 +129,18 @@ def _list_files(service, folder_id: str, query_extra: str = "") -> list[dict]:
     if query_extra:
         query += f" and {query_extra}"
 
-    results = (
-        service.files()
-        .list(
-            q=query,
-            fields="files(id, name, size, mimeType, modifiedTime)",
-            orderBy="name",
+    try:
+        results = (
+            service.files()
+            .list(
+                q=query,
+                fields="files(id, name, size, mimeType, modifiedTime)",
+                orderBy="name",
+            )
+            .execute()
         )
-        .execute()
-    )
+    except HttpError as e:
+        _handle_http_error(e, "파일 목록 조회")
     return results.get("files", [])
 
 
@@ -172,15 +213,18 @@ def cmd_pull(date_str: str):
         dest_path = os.path.join(input_dir, f["name"])
         print(f"  다운로드: {f['name']}...", end=" ")
 
-        request = service.files().get_media(fileId=f["id"])
-        with open(dest_path, "wb") as fh:
-            downloader = MediaIoBaseDownload(fh, request)
-            done = False
-            while not done:
-                _, done = downloader.next_chunk()
-
-        print("완료")
-        downloaded += 1
+        try:
+            request = service.files().get_media(fileId=f["id"])
+            with open(dest_path, "wb") as fh:
+                downloader = MediaIoBaseDownload(fh, request)
+                done = False
+                while not done:
+                    _, done = downloader.next_chunk()
+            print("완료")
+            downloaded += 1
+        except HttpError as e:
+            print(f"실패 (HTTP {e.resp.status})")
+            continue
 
     print(f"\n{downloaded}개 파일 → {input_dir}")
 
@@ -198,12 +242,14 @@ def cmd_push(date_str: str):
     filename = os.path.basename(xlsx_path)
     mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
-    # 업로드 대상 폴더 결정
-    target_folder_id = GDRIVE_FOLDER_ID
+    # 업로드 대상 폴더 결정 (없으면 자동 생성)
     subfolder_id = _find_subfolder(service, GDRIVE_FOLDER_ID, mmdd)
     if subfolder_id:
         target_folder_id = subfolder_id
         print(f"Drive 폴더 발견: {mmdd}/")
+    else:
+        target_folder_id = _create_subfolder(service, GDRIVE_FOLDER_ID, mmdd)
+        print(f"Drive 폴더 생성: {mmdd}/")
 
     # 기존 파일 확인 (동일 이름 → update)
     existing = _list_files(
@@ -212,18 +258,21 @@ def cmd_push(date_str: str):
 
     media = MediaFileUpload(xlsx_path, mimetype=mime_type)
 
-    if existing:
-        # 덮어쓰기
-        file_id = existing[0]["id"]
-        service.files().update(fileId=file_id, media_body=media).execute()
-        print(f"업데이트 완료: {filename} (기존 파일 덮어쓰기)")
-    else:
-        # 신규 업로드
-        file_metadata = {"name": filename, "parents": [target_folder_id]}
-        service.files().create(
-            body=file_metadata, media_body=media, fields="id"
-        ).execute()
-        print(f"업로드 완료: {filename} → Drive")
+    try:
+        if existing:
+            # 덮어쓰기
+            file_id = existing[0]["id"]
+            service.files().update(fileId=file_id, media_body=media).execute()
+            print(f"업데이트 완료: {filename} (기존 파일 덮어쓰기)")
+        else:
+            # 신규 업로드
+            file_metadata = {"name": filename, "parents": [target_folder_id]}
+            service.files().create(
+                body=file_metadata, media_body=media, fields="id"
+            ).execute()
+            print(f"업로드 완료: {filename} → Drive")
+    except HttpError as e:
+        _handle_http_error(e, "파일 업로드")
 
 
 def main():

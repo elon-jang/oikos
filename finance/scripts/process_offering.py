@@ -88,6 +88,11 @@ def write_data(date_str: str, data_json: str) -> str:
 
     if not os.path.exists(output_path):
         create_template(date_str)
+    else:
+        # 기존 파일 백업
+        backup_path = output_path.replace(".xlsx", "_backup.xlsx")
+        shutil.copy2(output_path, backup_path)
+        print(f"기존 파일 백업: {backup_path}")
 
     wb = openpyxl.load_workbook(output_path)
     ws = wb.active
