@@ -1,6 +1,7 @@
 # Claude Code Development Guide: Offering (헌금 전표 자동화)
 
-이 문서는 Claude Code가 헌금 전표 자동화 플러그인을 개발하고 유지보수할 때 참고하는 가이드입니다.
+이 문서는 **설계 결정, 아키텍처, 변경 가이드**를 다룹니다.
+실행 매뉴얼(판단 기준, OCR 주의사항, 단계별 흐름)은 `commands/process-offering.md`를 참조하세요.
 
 ## 프로젝트 개요
 
@@ -99,19 +100,8 @@ Google Drive (gdrive.py push)
 
 ### 3. 입력 유형별 처리
 
-**PDF 모드**: `data/YYYY/MMDD/input/scan.pdf`
-- Read 도구로 전체 페이지 일괄 읽기
-- 내용 기반 페이지 자동 분류
-
-**이미지 모드**: `data/YYYY/MMDD/input/*.jpg`
-- 각 이미지를 개별 Read
-- 내용 기반 유형 자동 분류
-
-**페이지 유형 자동 분류 (내용 기반)**:
-- 통계표: 표 형태 → 여러 건의 (이름, 금액) 추출, 합계 교차 검증
-- 전표: 단일 전표 → 총액 + 내역 추출, 부서명만 있으면 이름=부서명
-- 중복: 이전 페이지와 동일 내용 → 건너뛰기
-- 특별헌금: "송구영신", "헌신예배" 등 → 사용자에게 포함 여부 질문
+PDF(일괄 읽기)와 JPG(개별 읽기)를 지원하며, 내용 기반으로 페이지를 자동 분류합니다.
+분류 기준 및 의사결정 트리는 `commands/process-offering.md` 2단계를 참조하세요.
 
 ### 4. Google Drive 연동
 
@@ -179,40 +169,21 @@ Google Drive (gdrive.py push)
 ## CLI 사용법
 
 ```bash
-# 템플릿 생성 (MMDD 단축 지원)
+# process_offering.py: create | write | verify | rollback | summary
 python3 scripts/process_offering.py create 0125
-
-# 데이터 입력 (JSON via stdin)
-echo '{"십일조": [{"name": "최정호", "amount": 578000}]}' | \
-  python3 scripts/process_offering.py write 0125
-
-# dry-run (검증 + 미리보기만, 파일 쓰기 안함)
-echo '{"십일조": [{"name": "최정호", "amount": 578000}]}' | \
-  python3 scripts/process_offering.py write --dry-run 0125
-
-# 검증
+echo '{"십일조": [...]}' | python3 scripts/process_offering.py write 0125
 python3 scripts/process_offering.py verify 0125
 
-# 롤백 (백업에서 복원)
-python3 scripts/process_offering.py rollback 0125
-
-# 월간 요약
-python3 scripts/process_offering.py summary 202601   # 또는 01
-
-# YYYYMMDD 형식도 사용 가능
-python3 scripts/process_offering.py create 20260125
-
-# 이름 교정 (JSON via stdin)
-echo '{"names": ["천인성", "정완구"]}' | python3 scripts/correct_names.py
-
-# 교인 명부에 추가
+# correct_names.py: 이름 교정 | 명부 추가
+echo '{"names": ["천인성"]}' | python3 scripts/correct_names.py
 python3 scripts/correct_names.py --add "새교인이름"
 
-# Google Drive 연동
-python3 scripts/gdrive.py list              # 폴더 내용 조회
-python3 scripts/gdrive.py pull 0125         # 입력 파일 다운로드
-python3 scripts/gdrive.py push 0125         # 출력 Excel 업로드
+# gdrive.py: list | pull | push
+python3 scripts/gdrive.py pull 0125
+python3 scripts/gdrive.py push 0125
 ```
+
+상세 사용법과 JSON 형식은 `README.md`를 참조하세요.
 
 ## 카테고리 변경 시
 
@@ -240,3 +211,5 @@ python3 -m pytest tests/test_gdrive.py   # gdrive 모듈만
 - **Phase 4** ✅: Drive 폴더 자동 생성, Excel write 백업, API 에러 핸들링, 테스트 스위트
 - **Phase 5** ✅: 입력 검증, 설정 일관성 검증, 파일 I/O 방어, 에러 경로 테스트
 - **Phase 6** ✅: 테스트 setUp 리팩터링, dry-run, 월간 요약, rollback (73개 테스트)
+- **Phase 7** ✅: LLM 판단 정확도 향상 — 의사결정 트리, OCR Warning 체계화, 변환 예시, 카테고리 우선순위, 역할 분담표
+- **Phase 8** ✅: 문서 역할 정리 — CLAUDE.md(설계)/process-offering.md(실행) 분리, 중복 제거, 운영 안정성(재실행/신뢰도 기준)

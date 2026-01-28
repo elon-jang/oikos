@@ -240,3 +240,8 @@ scripts/
 - Phase 1 ✅: 폴더 구조 정리, PDF 지원, MMDD 단축
 - Phase 2 ✅: 중복 감지, 특별헌금 플래그, 카테고리 매핑 개선
 - Phase 3 ✅: Google Drive API 연동 (pull/push/list)
+- Phase 4 ✅: Drive 폴더 자동 생성, Excel write 백업, API 에러 핸들링, 테스트 스위트
+- Phase 5 ✅: 입력 검증, 설정 일관성 검증, 파일 I/O 방어, 에러 경로 테스트
+- Phase 6 ✅: 테스트 setUp 리팩터링, dry-run, 월간 요약, rollback (73개 테스트)
+- Phase 7 ✅: LLM 판단 정확도 향상 — 의사결정 트리, OCR Warning 체계화, 변환 예시, 카테고리 우선순위, 역할 분담표
+- Phase 8 ✅: 문서 역할 정리 — CLAUDE.md(설계)/process-offering.md(실행) 분리, 중복 제거, 운영 안정성(재실행/신뢰도 기준)
